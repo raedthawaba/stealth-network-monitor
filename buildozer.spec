@@ -39,7 +39,7 @@ fullscreen = 1
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,READ_PHONE_STATE,GET_TASKS
 
 # (int) Target Android API, should be as high as possible.
-android.api = 30
+android.api = 28
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True

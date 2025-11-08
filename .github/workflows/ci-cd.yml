@@ -158,24 +158,48 @@ jobs:
           libgl1-mesa-dev libgles2-mesa-dev \
           curl wget
     
-    - name: Install Android SDK and NDK
-      uses: android-actions/setup-android@v3
-      with:
-        api-level: 30
-        build-tools-version: 30.0.3
-        ndk-version: "25.1.8937393"
-    
-    - name: Set up Android environment
+    - name: Setup Android SDK manually (version 28 stable)
       run: |
-        echo "ANDROID_HOME=${{ steps.setup-android.outputs.sdk-path }}" >> $GITHUB_ENV
+        # Remove any existing Android SDK to start fresh
+        rm -rf /home/runner/android-sdk /home/runner/.android
+        
+        # Download and setup Android SDK command line tools
+        cd /home/runner
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+        unzip -q commandlinetools-linux-8512546_latest.zip
+        
+        # Setup proper directory structure
+        mkdir -p android-sdk/cmdline-tools
+        mv cmdline-tools android-sdk/cmdline-tools/latest
+        
+        # Set up environment variables
+        export ANDROID_HOME=/home/runner/android-sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+        
+        # Accept all licenses and install required components
+        echo "=== Accepting Android licenses ==="
+        yes | sdkmanager --licenses || true
+        
+        echo "=== Installing Android SDK components ==="
+        sdkmanager "build-tools;28.0.3" "platforms;android-28" "tools" "platform-tools"
+        
+        # Verify installation
+        echo "=== Verifying Android SDK installation ==="
+        sdkmanager --list_installed
+        
+        # Set environment variables for subsequent steps
+        echo "ANDROID_HOME=/home/runner/android-sdk" >> $GITHUB_ENV
         echo "ANDROID_NDK_HOME=${{ steps.setup-android.outputs.ndk-path }}" >> $GITHUB_ENV
-        echo "${{ steps.setup-android.outputs.sdk-path }}/platform-tools" >> $GITHUB_PATH
-        echo "${{ steps.setup-android.outputs.sdk-path }}/tools" >> $GITHUB_PATH
-        echo "${{ steps.setup-android.outputs.sdk-path }}/tools/bin" >> $GITHUB_PATH
-        echo "${{ steps.setup-android.outputs.ndk-path }}" >> $GITHUB_PATH
-        echo "=== Android environment set up ==="
+        echo "/home/runner/android-sdk/platform-tools" >> $GITHUB_PATH
+        echo "/home/runner/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        
+        echo "=== Android SDK setup complete ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
-        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+        echo "PATH: $PATH"
+        
+        # Verify aidl tool is available
+        which aidl || (echo "aidl tool not found!" && exit 1)
+        aidl --version || (echo "aidl tool check failed!" && exit 1)
     
     - name: Install Python dependencies
       run: |
@@ -185,11 +209,24 @@ jobs:
         echo "=== Python dependencies installed ==="
         buildozer --version
     
-    - name: Accept Android licenses
+    - name: Verify Android SDK setup
       run: |
-        echo "=== Accepting Android licenses ==="
-        yes | sdkmanager --licenses
-        echo "=== Android setup complete ==="
+        echo "=== Verifying Android SDK setup ==="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "PATH includes: $PATH"
+        
+        # Check that aidl is available (this is the tool that was missing)
+        if command -v aidl &> /dev/null; then
+          echo "✅ aidl tool found and working"
+          aidl --version
+        else
+          echo "❌ aidl tool not found - this was the root cause of the original error"
+          echo "Available tools in ANDROID_HOME/bin:"
+          ls -la $ANDROID_HOME/build-tools/28.0.3/ 2>/dev/null || echo "Build tools 28.0.3 not found"
+          exit 1
+        fi
+        
+        # List installed packages
         sdkmanager --list_installed
     
     - name: Clean previous build artifacts
@@ -206,8 +243,11 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Files in current directory:"
         ls -la
+        echo "=== Android environment verification ==="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "PATH: $PATH"
         echo "=== Starting buildozer android debug ==="
-        buildozer -v android debug
+        buildozer --log-level=2 android debug
     
     - name: Check if APK was created
       run: |
