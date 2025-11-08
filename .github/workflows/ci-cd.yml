@@ -347,33 +347,31 @@ jobs:
         echo "=== Creating buildozer global config to use pre-installed SDK ==="
         mkdir -p ~/.buildozer_global
         
-        # Comprehensive config creation with ALL required settings to force pre-installed SDK
-        cat > ~/.buildozer_global/global_config.ini << 'BUILDOZER_CONFIG'
-[app]
-# Force build tools version to prevent buildozer from trying to install newer versions
-android.build_tools_version = 28.0.3
-# Force API version
-android.api = 28
-# Force minimal API
-android.minapi = 21
-# Force NDK API
-android.ndk_api = 21
-# Force SDK path to pre-installed SDK
-android.sdk_path = /opt/android-sdk
-android.ndk_path = /opt/android-ndk
-
-[buildozer]
-# Force log level for debugging
-log_level = 2
-# Disable download cache to prevent SDK downloads
-android.download_ignore_cache_version = True
-# Force using existing build tools
-android.copy_libs = 1
-# Disable AndroidX to prevent extra downloads
-android.enable_androidx = False
-# Disable Gradle plugin to prevent extra downloads
-android.enable_gradle_plugin_build = False
-BUILDOZER_CONFIG
+        # Create comprehensive config with echo commands to avoid YAML heredoc issues
+        echo "[app]" > ~/.buildozer_global/global_config.ini
+        echo "# Force build tools version to prevent buildozer from trying to install newer versions" >> ~/.buildozer_global/global_config.ini
+        echo "android.build_tools_version = 28.0.3" >> ~/.buildozer_global/global_config.ini
+        echo "# Force API version" >> ~/.buildozer_global/global_config.ini
+        echo "android.api = 28" >> ~/.buildozer_global/global_config.ini
+        echo "# Force minimal API" >> ~/.buildozer_global/global_config.ini
+        echo "android.minapi = 21" >> ~/.buildozer_global/global_config.ini
+        echo "# Force NDK API" >> ~/.buildozer_global/global_config.ini
+        echo "android.ndk_api = 21" >> ~/.buildozer_global/global_config.ini
+        echo "# Force SDK path to pre-installed SDK" >> ~/.buildozer_global/global_config.ini
+        echo "android.sdk_path = /opt/android-sdk" >> ~/.buildozer_global/global_config.ini
+        echo "android.ndk_path = /opt/android-ndk" >> ~/.buildozer_global/global_config.ini
+        echo "" >> ~/.buildozer_global/global_config.ini
+        echo "[buildozer]" >> ~/.buildozer_global/global_config.ini
+        echo "# Force log level for debugging" >> ~/.buildozer_global/global_config.ini
+        echo "log_level = 2" >> ~/.buildozer_global/global_config.ini
+        echo "# Disable download cache to prevent SDK downloads" >> ~/.buildozer_global/global_config.ini
+        echo "android.download_ignore_cache_version = True" >> ~/.buildozer_global/global_config.ini
+        echo "# Force using existing build tools" >> ~/.buildozer_global/global_config.ini
+        echo "android.copy_libs = 1" >> ~/.buildozer_global/global_config.ini
+        echo "# Disable AndroidX to prevent extra downloads" >> ~/.buildozer_global/global_config.ini
+        echo "android.enable_androidx = False" >> ~/.buildozer_global/global_config.ini
+        echo "# Disable Gradle plugin to prevent extra downloads" >> ~/.buildozer_global/global_config.ini
+        echo "android.enable_gradle_plugin_build = False" >> ~/.buildozer_global/global_config.ini
         
         echo "=== Buildozer global config created ==="
         cat ~/.buildozer_global/global_config.ini
