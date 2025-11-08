@@ -66,24 +66,63 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Set up Python 3.8
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
+        python-version: "3.8"
     
-    - name: Install Java 11 (required for Android builds)
+    - name: Install Java 17 (required for Gradle and Android builds)
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
+        java-version: '17'
         distribution: 'temurin'
         cache: 'gradle'
+    
+    - name: Cache Buildozer global directory
+      uses: actions/cache@v3
+      with:
+        path: .buildozer_global
+        key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          buildozer-global-
+    
+    - name: Cache Buildozer build directory
+      uses: actions/cache@v3
+      with:
+        path: .buildozer
+        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-
+
+    - name: Get current date
+      id: get-date
+      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+          build-essential git \
+          ffmpeg \
+          libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev libavformat-dev libavcodec-dev \
+          libunwind-dev zlib1g-dev \
+          libsqlite3-dev sqlite3 \
+          bzip2 libbz2-dev \
+          openssl libgdbm-dev libgdbm-compat-dev \
+          liblzma-dev libreadline-dev uuid-dev \
+          libgstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+          zip unzip autoconf libtool pkg-config \
+          libncurses5-dev libncursesw5-dev libtinfo5 \
+          cmake libffi-dev libssl-dev automake
     
     - name: Install Android SDK and NDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 30
-        build-tools-version: 30.0.3
-        ndk-version: "21.1.6352462"
+        api-level: 31
+        build-tools-version: 31.0.0
+        ndk-version: "25.1.8937393"
     
     - name: Set up Android environment
       run: |
@@ -92,26 +131,30 @@ jobs:
         echo "${{ steps.setup-android.outputs.sdk-path }}/platform-tools" >> $GITHUB_PATH
         echo "${{ steps.setup-android.outputs.sdk-path }}/tools" >> $GITHUB_PATH
         echo "${{ steps.setup-android.outputs.sdk-path }}/tools/bin" >> $GITHUB_PATH
+        echo "${{ steps.setup-android.outputs.ndk-path }}" >> $GITHUB_PATH
     
-    - name: Install buildozer and dependencies
+    - name: Install Python dependencies
       run: |
-        pip install --upgrade pip
-        pip install buildozer cython
-        # Install additional Android build tools
-        yes | sdkmanager "platform-tools" "build-tools;30.0.3"
-        sdkmanager --list | grep "android-"
+        python -m pip install --upgrade pip
+        pip install buildozer cython==0.29.33
+        pip install --upgrade setuptools wheel
     
     - name: Accept Android licenses
       run: |
-        yes | sdkmanager --licenses || true
-        # Accept the important licenses
-        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" | tee /tmp/android-license
-        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" | tee -a /tmp/android-license
-        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" | xargs -I {} echo "y" | sdkmanager --licenses || true
+        yes | sdkmanager --licenses
+        yes | sdkmanager "platform-tools" "build-tools;31.0.0" "android-31"
+        sdkmanager --list_installed
+    
+    - name: Clean previous build artifacts
+      run: |
+        rm -rf .buildozer
+        rm -rf bin/
+        ls -la
     
     - name: Build Android APK
+      id: build
       run: |
-        buildozer android debug --verbose
+        buildozer -v android debug
     
     - name: Check if APK was created
       run: |
@@ -120,8 +163,11 @@ jobs:
           ls -la bin/
         else
           echo "❌ APK not found in bin/ directory"
-          ls -la
-          find . -name "*.apk" -type f
+          echo "Checking for any APK files..."
+          find . -name "*.apk" -type f -exec ls -la {} \;
+          echo "Checking .buildozer directory..."
+          find .buildozer -name "*.apk" -type f -exec ls -la {} \;
+          exit 1
         fi
     
     - name: Upload APK artifact
