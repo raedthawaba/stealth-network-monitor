@@ -78,31 +78,24 @@ jobs:
         distribution: 'temurin'
         cache: 'none'  # Disable Java cache to avoid Gradle file errors
     
-    - name: Cache Buildozer global directory
-      uses: actions/cache@v3
-      with:
-        path: .buildozer_global
-        key: buildozer-global-${{ hashFiles('**/buildozer.spec') }}
-        restore-keys: |
-          buildozer-global-
-    
-    - name: Cache Buildozer build directory
-      uses: actions/cache@v3
-      with:
-        path: .buildozer
-        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('**/buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-
-
     - name: Debug project structure
       run: |
-        echo "=== Current directory structure ==="
+        echo "=== Current working directory ==="
+        pwd
+        echo "=== All files and directories ==="
         ls -la
-        echo "=== Looking for buildozer.spec ==="
-        find . -name "buildozer.spec" -type f
-        echo "=== Files in current directory ==="
-        pwd && ls -la
-        
+        echo "=== Looking for buildozer.spec recursively ==="
+        find . -name "buildozer.spec" -type f -exec echo "Found: {}" \; -exec cat {} \;
+        echo "=== Check if we're in the right directory ==="
+        if [ -f "buildozer.spec" ]; then
+          echo "✅ buildozer.spec found in current directory"
+          cat buildozer.spec | head -20
+        else
+          echo "❌ buildozer.spec NOT found in current directory"
+          echo "This should not happen!"
+          exit 1
+        fi
+    
     - name: Get current date
       id: get-date
       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
@@ -141,41 +134,60 @@ jobs:
         echo "${{ steps.setup-android.outputs.sdk-path }}/tools" >> $GITHUB_PATH
         echo "${{ steps.setup-android.outputs.sdk-path }}/tools/bin" >> $GITHUB_PATH
         echo "${{ steps.setup-android.outputs.ndk-path }}" >> $GITHUB_PATH
+        echo "=== Android environment set up ==="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
     
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install buildozer cython==0.29.33
         pip install --upgrade setuptools wheel
+        echo "=== Python dependencies installed ==="
+        buildozer --version
     
     - name: Accept Android licenses
       run: |
+        echo "=== Accepting Android licenses ==="
         yes | sdkmanager --licenses
         yes | sdkmanager "platform-tools" "build-tools;31.0.0" "android-31"
+        echo "=== Installed packages ==="
         sdkmanager --list_installed
     
     - name: Clean previous build artifacts
       run: |
-        rm -rf .buildozer
+        echo "=== Cleaning previous artifacts ==="
+        rm -rf .buildozer .buildozer_global
         rm -rf bin/
-        ls -la
+        ls -la || echo "Directory is clean"
     
     - name: Build Android APK
       id: build
       run: |
+        echo "=== Starting buildozer build ==="
+        echo "Current directory: $(pwd)"
+        echo "Files in current directory:"
+        ls -la
+        echo "=== Starting buildozer android debug ==="
         buildozer -v android debug
     
     - name: Check if APK was created
       run: |
+        echo "=== Checking for APK files ==="
+        echo "Contents of bin/ directory:"
+        ls -la bin/ 2>/dev/null || echo "bin/ directory does not exist"
+        echo "=== Searching for any APK files ==="
+        find . -name "*.apk" -type f -exec ls -la {} \; 2>/dev/null || echo "No APK files found"
+        
         if [ -f "bin/StealthNetworkMonitor-*.apk" ]; then
           echo "✅ APK build successful!"
           ls -la bin/
         else
           echo "❌ APK not found in bin/ directory"
-          echo "Checking for any APK files..."
-          find . -name "*.apk" -type f -exec ls -la {} \;
-          echo "Checking .buildozer directory..."
-          find .buildozer -name "*.apk" -type f -exec ls -la {} \;
+          echo "Checking alternative locations..."
+          find . -name "*.apk" -type f
+          echo "=== Buildozer build directory contents ==="
+          find .buildozer -type f -name "*.apk" 2>/dev/null || echo "No .buildozer directory or no APKs"
           exit 1
         fi
     
