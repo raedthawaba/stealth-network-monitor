@@ -41,11 +41,20 @@ android.permissions = INTERNET,ACCESS_NETWORK_STATE,READ_PHONE_STATE,GET_TASKS
 # (int) Target Android API, should be as high as possible.
 android.api = 28
 
+# (str) Android build tools version to use, must match existing installation
+android.build_tools_version = 28.0.3
+
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
 
 # (str) Android app theme, default is ok for Kivy-based app
 android.theme = "@android:style/Theme.NoTitleBar"
+
+# (str) Android SDK path (will be overridden in CI/CD)
+# android.sdk_path = /path/to/android-sdk
+
+# (str) Android NDK path (will be overridden in CI/CD)
+# android.ndk_path = /path/to/android-ndk
 
 # (list) Pattern to whitelist for the whole project
 android.whitelist = 
