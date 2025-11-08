@@ -151,8 +151,11 @@ jobs:
           liblzma-dev libreadline-dev uuid-dev \
           libgstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
           zip unzip autoconf libtool pkg-config \
-          libncurses5-dev libncursesw5-dev libtinfo5 \
-          cmake libffi-dev libssl-dev automake
+          libncurses6 libtinfo6 \
+          cmake libffi-dev libssl-dev automake \
+          libgl1-mesa-dev libgles2-mesa-dev \
+          python3-distutils \
+          curl wget
     
     - name: Install Android SDK and NDK
       uses: android-actions/setup-android@v3
