@@ -100,10 +100,10 @@ jobs:
       with:
         python-version: "3.8"
     
-    - name: Install Java 17 (required for Gradle and Android builds)
+    - name: Install Java 8 (required for Android SDK compatibility)
       uses: actions/setup-java@v3
       with:
-        java-version: '17'
+        java-version: '8'
         distribution: 'temurin'
     
     - name: Check project structure
