@@ -41,9 +41,6 @@ android.permissions = INTERNET,ACCESS_NETWORK_STATE,READ_PHONE_STATE,GET_TASKS
 # (int) Target Android API, should be as high as possible.
 android.api = 28
 
-# (str) Android build tools version to use, must match existing installation
-android.build_tools_version = 28.0.3
-
 # (str) Android SDK path - set to prevent download
 android.sdk_path = 
 

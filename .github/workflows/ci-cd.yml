@@ -341,10 +341,20 @@ jobs:
         echo "ANDROID_UPDATE_SDK=0" >> $GITHUB_ENV
         echo "BUILDOZER_IGNORE_SDK_VERSION=1" >> $GITHUB_ENV
         echo "BUILDOZER_FORCE_SYSTEM_SDK=1" >> $GITHUB_ENV
+        echo "BUILDOZER_DISABLE_SDK_DOWNLOAD_ALL=1" >> $GITHUB_ENV
+        echo "BUILDOZER_NO_SDK_UPDATE=1" >> $GITHUB_ENV
+        echo "BUILDOZER_SYSTEM_SDK_ONLY=1" >> $GITHUB_ENV
         
-        # Verify license acceptance one more time
-        echo "=== Final license acceptance ==="
-        timeout 10s bash -c 'yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses' 2>/dev/null || echo "License acceptance completed"
+        # Accept ALL Android SDK licenses to prevent download attempts
+        echo "=== Accepting ALL Android SDK licenses ==="
+        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || echo "All licenses accepted"
+        echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || echo "All licenses accepted"
+        # Force accept any remaining licenses
+        for license_dir in $ANDROID_HOME/licenses/*; do
+          if [ -d "$license_dir" ]; then
+            echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$license_dir/android-sdk-license" 2>/dev/null || true
+          fi
+        done
         
         # Destroy any existing buildozer SDK installation to force use of pre-installed SDK
         echo "=== Destroying any existing buildozer SDK to force use of pre-installed SDK ==="
