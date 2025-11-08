@@ -315,45 +315,47 @@ jobs:
         
         echo "=== Build artifacts cleaned and environment configured ==="
     
-    - name: Build Android APK with forced SDK configuration
+    - name: Build Android APK
       id: build
       run: |
-        # Source the buildozer environment configuration
-        source ~/.buildozer_global/android.env
-        
-        echo "=== Starting buildozer build with forced SDK configuration ==="
+        echo "=== Starting buildozer build ==="
         echo "Current directory: $(pwd)"
+        
+        # Set up environment variables directly from action outputs
+        export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
+        export ANDROID_SDK_ROOT="${{ steps.setup-android.outputs.sdk-path }}"
+        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
+        export PATH="${{ steps.setup-android.outputs.sdk-path }}/platform-tools:${{ steps.setup-android.outputs.sdk-path }}/tools:${{ steps.setup-android.outputs.sdk-path }}/tools/bin:${{ steps.setup-android.outputs.sdk-path }}/build-tools/28.0.3:$PATH"
+        
+        echo "=== Environment variables configured ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "PATH: $PATH"
         
-        # Double-check that aidl tool is available
-        echo "=== Final aidl verification ==="
+        # Verify aidl tool
+        echo "=== Verifying aidl tool ==="
         AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
         if [ -f "$AIDL_PATH" ]; then
-          echo "✅ aidl tool confirmed at: $AIDL_PATH"
-          export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
+          echo "✅ aidl tool found at: $AIDL_PATH"
         else
-          echo "❌ aidl tool missing! This should not happen."
-          echo "Available build-tools:"
-          ls -la $ANDROID_HOME/build-tools/ || echo "No build-tools directory"
-          exit 1
+          echo "⚠️ aidl not in expected location, searching alternatives..."
+          # Search for aidl in any build-tools directory
+          for dir in $ANDROID_HOME/build-tools/*/; do
+            if [ -f "${dir}aidl" ]; then
+              echo "✅ Found aidl in: $dir"
+              export PATH=$PATH:$dir
+              break
+            fi
+          done
         fi
         
-        # Force buildozer to use existing SDK by setting environment variables
-        export ANDROID_HOME="$ANDROID_HOME"
-        export ANDROID_SDK_ROOT="$ANDROID_HOME"
-        export ANDROID_NDK_HOME="$ANDROID_NDK_HOME"
-        export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$PATH"
+        # Accept all licenses one final time
+        echo "=== Final license acceptance ==="
+        yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses 2>/dev/null || true
         
-        echo "=== Running buildozer with forced SDK configuration ==="
-        echo "Environment variables set for buildozer:"
-        echo "ANDROID_HOME=$ANDROID_HOME"
-        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-        echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
-        
-        # Run buildozer with verbose logging to see exactly what it's doing
+        # Run buildozer build
+        echo "=== Running buildozer android debug ==="
         buildozer --log-level=2 android debug
     
     - name: Check if APK was created
