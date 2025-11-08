@@ -172,7 +172,7 @@ jobs:
     
     - name: Upload APK artifact
       if: hashFiles('bin/*.apk') != ''
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: stealth-network-monitor-apk
         path: bin/*.apk

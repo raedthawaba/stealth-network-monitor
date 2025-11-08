@@ -34,21 +34,28 @@ class TestBasicFunctionality(unittest.TestCase):
     
     def test_main_files_exist(self):
         """Test that main application files exist"""
-        self.assertTrue(os.path.exists('stealth_network_spy_fixed.py'), 
+        # Get the directory where this test file is located
+        test_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        self.assertTrue(os.path.exists(os.path.join(test_dir, 'stealth_network_spy_fixed.py')), 
                        "Main monitoring module not found")
-        self.assertTrue(os.path.exists('main.py'), 
+        self.assertTrue(os.path.exists(os.path.join(test_dir, 'main.py')), 
                        "Main GUI module not found")
-        self.assertTrue(os.path.exists('buildozer.spec'), 
+        self.assertTrue(os.path.exists(os.path.join(test_dir, 'buildozer.spec')), 
                        "Buildozer configuration not found")
-        self.assertTrue(os.path.exists('requirements.txt'), 
+        self.assertTrue(os.path.exists(os.path.join(test_dir, 'requirements.txt')), 
                        "Requirements file not found")
     
     def test_config_files(self):
         """Test that configuration files are valid"""
-        if os.path.exists('config.yaml'):
+        # Get the directory where this test file is located
+        test_dir = os.path.dirname(os.path.abspath(__file__))
+        config_file = os.path.join(test_dir, 'config.yaml')
+        
+        if os.path.exists(config_file):
             try:
                 import yaml
-                with open('config.yaml', 'r') as f:
+                with open(config_file, 'r') as f:
                     yaml.safe_load(f)
             except ImportError:
                 # YAML not available in this environment, skip
