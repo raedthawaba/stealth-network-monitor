@@ -345,16 +345,21 @@ jobs:
         echo "BUILDOZER_NO_SDK_UPDATE=1" >> $GITHUB_ENV
         echo "BUILDOZER_SYSTEM_SDK_ONLY=1" >> $GITHUB_ENV
         
-        # Accept ALL Android SDK licenses to prevent download attempts
-        echo "=== Accepting ALL Android SDK licenses ==="
-        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || echo "All licenses accepted"
-        echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || echo "All licenses accepted"
-        # Force accept any remaining licenses
-        for license_dir in $ANDROID_HOME/licenses/*; do
-          if [ -d "$license_dir" ]; then
-            echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$license_dir/android-sdk-license" 2>/dev/null || true
-          fi
-        done
+        # Accept ALL Android SDK licenses and INSTALL build-tools 36.1.0
+        echo "=== Accepting ALL Android SDK licenses and installing build-tools 36.1.0 ==="
+        # Accept licenses first
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+        yes | $ANDROID_HOME/tools/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+        # Install build-tools 36.1.0 that buildozer wants
+        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;36.1.0" || echo "Build-tools 36.1.0 installation attempted"
+        # Verify installation
+        if [ -d "$ANDROID_HOME/build-tools/36.1.0" ]; then
+          echo "✅ Build-tools 36.1.0 installed successfully"
+          ls -la $ANDROID_HOME/build-tools/36.1.0/ | head -10
+        else
+          echo "❌ Build-tools 36.1.0 not found, trying alternative installation"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list | grep "build-tools" | head -5
+        fi
         
         # Destroy any existing buildozer SDK installation to force use of pre-installed SDK
         echo "=== Destroying any existing buildozer SDK to force use of pre-installed SDK ==="
