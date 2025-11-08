@@ -59,12 +59,6 @@ android.private_storage = True
 # (str) Android app theme, default is ok for Kivy-based app
 android.theme = "@android:style/Theme.NoTitleBar"
 
-# (str) Android SDK path (will be overridden in CI/CD)
-android.sdk_path = 
-
-# (str) Android NDK path (will be overridden in CI/CD)
-android.ndk_path = 
-
 # (list) Pattern to whitelist for the whole project
 android.whitelist = 
 
