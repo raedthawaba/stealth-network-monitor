@@ -276,26 +276,27 @@ jobs:
         echo "=== Installed SDK packages ==="
         sdkmanager --list_installed 2>/dev/null || echo "sdkmanager check failed but continuing"
     
-    - name: Clean build artifacts and configure buildozer SDK
+    - name: Clean build artifacts and configure environment
       run: |
-        echo "=== Cleaning all build artifacts and configuring buildozer ==="
+        echo "=== Cleaning all build artifacts ==="
         # Clean all buildozer directories and caches
         rm -rf .buildozer .buildozer_global
         rm -rf bin/
         rm -rf ~/.buildozer
         rm -rf ~/.cache/buildozer
         
-        # Create buildozer global configuration to use existing SDK
+        # Create buildozer directory structure
         mkdir -p ~/.buildozer_global
         
-        # Configure buildozer to use the pre-installed Android SDK
-        cat > ~/.buildozer_global/android.env << 'EOF'
-# Force buildozer to use existing Android SDK
-export ANDROID_HOME="$ANDROID_HOME"
-export ANDROID_SDK_ROOT="$ANDROID_HOME"
-export ANDROID_NDK_HOME="$ANDROID_NDK_HOME"
-export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$PATH"
-EOF
+        # Write buildozer configuration file with proper escaping
+        echo '# Buildozer SDK Configuration' > ~/.buildozer_global/android.env
+        echo 'export ANDROID_HOME="$ANDROID_HOME"' >> ~/.buildozer_global/android.env
+        echo 'export ANDROID_SDK_ROOT="$ANDROID_HOME"' >> ~/.buildozer_global/android.env
+        echo 'export ANDROID_NDK_HOME="$ANDROID_NDK_HOME"' >> ~/.buildozer_global/android.env
+        echo 'export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$PATH"' >> ~/.buildozer_global/android.env
+        
+        # Make the configuration file executable
+        chmod +x ~/.buildozer_global/android.env
         
         # Source the configuration
         source ~/.buildozer_global/android.env
@@ -312,7 +313,7 @@ EOF
         yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
         yes | sdkmanager --licenses || true
         
-        echo "=== Build artifacts cleaned and buildozer configured ==="
+        echo "=== Build artifacts cleaned and environment configured ==="
     
     - name: Build Android APK with forced SDK configuration
       id: build
