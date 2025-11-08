@@ -157,15 +157,6 @@ jobs:
           cmake libffi-dev libssl-dev automake \
           libgl1-mesa-dev libgles2-mesa-dev \
           curl wget
-    
-    - name: Setup Android SDK with proper aidl support
-      uses: android-actions/setup-android@v3
-      with:
-        packages: "platform-tools;build-tools-28.0.3;android-28"
-        accept-android-sdk-licenses: true
-      env:
-        SKIP_JDK_VERSION_CHECK: true
-    
     - name: Accept all Android licenses first
       run: |
         echo "=== Accepting all Android SDK licenses ==="
@@ -177,11 +168,19 @@ jobs:
         printf "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n" | sdkmanager --licenses || true
         echo "=== All licenses accepted ==="
     
-    - name: Install minimal build-tools only
+    - name: Setup Android SDK with proper aidl support
+      uses: android-actions/setup-android@v3
+      with:
+        packages: "platform-tools;build-tools;android-30"
+        accept-android-sdk-licenses: true
+      env:
+        SKIP_JDK_VERSION_CHECK: true
+    
+    - name: Install build-tools (latest)
       run: |
-        echo "=== Installing minimal build-tools only ==="
-        # Only install the specific version we need, not multiple versions
-        sdkmanager "build-tools;28.0.3"
+        echo "=== Installing build-tools (latest) ==="
+        # Install latest build-tools
+        sdkmanager "build-tools;latest"
         echo "=== Build-tools installation complete ==="
     
     - name: Pre-accept all licenses for buildozer
