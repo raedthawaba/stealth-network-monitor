@@ -11,6 +11,7 @@ package.domain = com.stealth.intel
 
 # (str) Source code where the main.py live
 source = .
+source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,atlas,json,db
