@@ -37,14 +37,27 @@ class TestBasicFunctionality(unittest.TestCase):
         # Get the directory where this test file is located
         test_dir = os.path.dirname(os.path.abspath(__file__))
         
-        self.assertTrue(os.path.exists(os.path.join(test_dir, 'stealth_network_spy_fixed.py')), 
-                       "Main monitoring module not found")
-        self.assertTrue(os.path.exists(os.path.join(test_dir, 'main.py')), 
-                       "Main GUI module not found")
-        self.assertTrue(os.path.exists(os.path.join(test_dir, 'buildozer.spec')), 
-                       "Buildozer configuration not found")
-        self.assertTrue(os.path.exists(os.path.join(test_dir, 'requirements.txt')), 
-                       "Requirements file not found")
+        # List of required files to check
+        required_files = {
+            'stealth_network_spy_fixed.py': 'Main monitoring module not found',
+            'main.py': 'Main GUI module not found', 
+            'buildozer.spec': 'Buildozer configuration not found',
+            'requirements.txt': 'Requirements file not found'
+        }
+        
+        # Check each file
+        for filename, error_message in required_files.items():
+            file_path = os.path.join(test_dir, filename)
+            self.assertTrue(os.path.exists(file_path), error_message)
+            
+            # Also debug print for CI/CD
+            if os.path.exists(file_path):
+                print(f"✅ Found: {filename}")
+            else:
+                print(f"❌ Missing: {filename} at {file_path}")
+                print(f"Current test directory: {test_dir}")
+                print(f"Directory contents: {os.listdir(test_dir) if os.path.exists(test_dir) else 'Directory not accessible'}")
+                break
     
     def test_config_files(self):
         """Test that configuration files are valid"""
