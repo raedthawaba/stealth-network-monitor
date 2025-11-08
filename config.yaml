@@ -1,0 +1,191 @@
+# Stealth Network Monitor - Configuration File
+# YAML format for easy editing and deployment
+
+# Application Settings
+app:
+  name: "Stealth Network Monitor"
+  version: "1.0.0"
+  debug: false
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# Database Configuration
+database:
+  path: "data/monitor.db"
+  encryption: true
+  backup_interval: 3600  # seconds
+  retention_days: 30
+  max_size_mb: 1000
+
+# Network Monitoring Settings
+network:
+  interface: "auto"  # auto, eth0, wlan0, etc.
+  scan_interval: 30  # seconds
+  max_connections: 1000
+  timeout: 5  # seconds
+  protocols: ["TCP", "UDP"]
+  capture_filter: "port 80 or port 443 or port 22"  # netstat filter
+
+# Application Detection
+apps:
+  browsers:
+    enabled: true
+    signatures:
+      - "chrome"
+      - "firefox"
+      - "safari"
+      - "edge"
+      - "opera"
+      - "brave"
+  
+  social_media:
+    enabled: true
+    signatures:
+      - "whatsapp"
+      - "telegram"
+      - "instagram"
+      - "facebook"
+      - "twitter"
+      - "snapchat"
+      - "tiktok"
+  
+  streaming:
+    enabled: true
+    signatures:
+      - "youtube"
+      - "netflix"
+      - "spotify"
+      - "twitch"
+      - "disney"
+  
+  communication:
+    enabled: true
+    signatures:
+      - "discord"
+      - "skype"
+      - "zoom"
+      - "teams"
+      - "slack"
+
+  games:
+    enabled: true
+    signatures:
+      - "minecraft"
+      - "fortnite"
+      - "roblox"
+      - "valorant"
+
+# Behavioral Analysis
+behavioral_analysis:
+  enabled: true
+  risk_thresholds:
+    low: 30
+    medium: 60
+    high: 85
+  pattern_detection:
+    unusual_hours: true
+    excessive_usage: true
+    suspicious_domains: true
+  learning_period_days: 7
+
+# Notification Settings
+notifications:
+  enabled: false  # Set to true to enable notifications
+  methods:
+    email: false
+    sms: false
+    webhook: false
+  high_risk_only: true
+  quiet_hours:
+    enabled: true
+    start: "22:00"
+    end: "08:00"
+
+# API Configuration
+api:
+  enabled: false  # Set to true to enable API
+  port: 8080
+  host: "0.0.0.0"
+  cors: true
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+
+# GUI Settings
+gui:
+  theme: "dark"  # light, dark, auto
+  language: "en"  # en, ar, es, fr
+  refresh_interval: 5  # seconds
+  max_log_lines: 1000
+  compact_view: false
+
+# Security Settings
+security:
+  database_encryption: true
+  log_encryption: false
+  secure_delete: true
+  session_timeout: 3600  # seconds
+  failed_attempts_limit: 5
+
+# Performance Settings
+performance:
+  max_memory_mb: 512
+  max_cpu_percent: 25
+  thread_count: 4
+  batch_size: 100
+  cache_size: 1000
+
+# Export Settings
+export:
+  formats: ["json", "csv", "html"]
+  include_charts: true
+  include_raw_data: false
+  compression: true
+  schedule:
+    daily: false
+    weekly: true
+    monthly: false
+
+# Development Settings (for testing)
+development:
+  mock_data: false
+  verbose_logging: false
+  save_snapshots: false
+  simulate_network: false
+
+# Device-Specific Settings
+devices:
+  android:
+    termux_compatible: true
+    battery_optimized: true
+    low_power_mode: false
+  linux:
+    requires_root: false
+    network_interface: "auto"
+  windows:
+    wmi_enabled: true
+    firewall_detection: true
+
+# Logging Configuration
+logging:
+  file: "logs/monitor.log"
+  max_file_size: 10  # MB
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  console_output: true
+  syslog: false
+
+# Backup Settings
+backup:
+  enabled: true
+  interval: 3600  # seconds
+  location: "backups/"
+  compression: true
+  encryption: false
+  max_backups: 7
+
+# Update Settings
+update:
+  auto_check: false
+  update_channel: "stable"  # stable, beta, dev
+  notify_updates: true
+  backup_before_update: true

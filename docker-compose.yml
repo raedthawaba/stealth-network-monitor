@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # Main monitoring application
+  stealth-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stealth-network-monitor
+    restart: unless-stopped
+    privileged: true  # Required for network monitoring
+    network_mode: host  # Access to host network
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./exports:/app/exports
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - MONITORING_INTERVAL=30
+    ports:
+      - "8080:8080"  # Web interface (if added later)
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sqlite3; sqlite3.connect('/app/data/monitor.db').close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web dashboard (optional)
+  web-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: stealth-web-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - stealth-monitor
+    environment:
+      - API_URL=http://stealth-monitor:8080
+      - DB_PATH=/app/data/monitor.db
+    volumes:
+      - ./data:/app/data
+
+  # Database backup service
+  backup-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
+    container_name: stealth-backup
+    restart: "no"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+    environment:
+      - BACKUP_INTERVAL=3600  # 1 hour
+      - RETENTION_DAYS=30
+    depends_on:
+      - stealth-monitor
+
+  # Monitoring and logging
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: stealth-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: stealth-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./monitoring/grafana:/etc/grafana/provisioning
+      - ./data/grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+networks:
+  default:
+    name: stealth-network
+    driver: bridge
+
+volumes:
+  monitor_data:
+    driver: local
+  logs_data:
+    driver: local
+  exports_data:
+    driver: local

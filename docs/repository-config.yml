@@ -1,0 +1,194 @@
+# GitHub Repository Configuration
+# For stealth-network-monitor
+
+# Default branch
+default_branch: main
+
+# Branches to protect
+protected_branches:
+  - main
+  - develop
+
+# Branch protection rules
+branch_protection:
+  required_status_checks:
+    strict: true
+    contexts:
+      - test
+      - security-scan
+  
+  enforce_admins: false
+  required_pull_request_reviews:
+    required_approving_review_count: 2
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: true
+  
+  restrictions:
+    teams: []
+    users: []
+
+# Issue templates
+issue_templates:
+  bug_report:
+    title: "Bug: [Short description]"
+    labels: ["bug", "help wanted"]
+    body: |
+      ## Bug Description
+      A clear and concise description of what the bug is.
+      
+      ## Steps to Reproduce
+      Steps to reproduce the behavior:
+      1. Go to '...'
+      2. Click on '....'
+      3. Scroll down to '....'
+      4. See error
+      
+      ## Expected Behavior
+      A clear and concise description of what you expected to happen.
+      
+      ## Screenshots
+      If applicable, add screenshots to help explain your problem.
+      
+      ## Environment
+      - OS: [e.g. Android, Linux]
+      - Termux version: [e.g. 0.118]
+      - Python version: [e.g. 3.10]
+      
+      ## Additional Context
+      Add any other context about the problem here.
+
+  feature_request:
+    title: "Feature: [Short description]"
+    labels: ["enhancement"]
+    body: |
+      ## Feature Description
+      A clear and concise description of the feature you'd like to see implemented.
+      
+      ## Problem Statement
+      What problem does this feature solve? Is your feature request related to a problem?
+      
+      ## Proposed Solution
+      Describe the solution you'd like to see implemented.
+      
+      ## Alternative Solutions
+      Describe any alternative solutions or features you've considered.
+      
+      ## Additional Context
+      Add any other context, screenshots, or mockups about the feature request here.
+
+# Pull request template
+pull_request_template:
+  body: |
+    ## Description
+    Brief description of changes made in this PR.
+    
+    ## Type of Change
+    - [ ] Bug fix (non-breaking change which fixes an issue)
+    - [ ] New feature (non-breaking change which adds functionality)
+    - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+    - [ ] Documentation update
+    - [ ] Performance improvement
+    - [ ] Code refactoring
+    
+    ## Checklist
+    - [ ] My code follows the style guidelines of this project
+    - [ ] I have performed a self-review of my own code
+    - [ ] I have commented my code, particularly in hard-to-understand areas
+    - [ ] I have made corresponding changes to the documentation
+    - [ ] My changes generate no new warnings
+    - [ ] I have added tests that prove my fix is effective or that my feature works
+    - [ ] New and existing unit tests pass locally with my changes
+    - [ ] Any dependent changes have been merged and published
+    
+    ## Screenshots
+    If applicable, add screenshots to help explain your changes.
+    
+    ## Testing Instructions
+    How to test the changes made in this PR:
+    1. Step 1
+    2. Step 2
+    3. See results
+
+# Security policy
+security:
+  supported_versions: "All versions"
+  contact_email: "security@stealth-monitor.com"
+  policy_text: |
+    ## Security Policy
+    
+    ### Supported Versions
+    We currently support the following versions of Stealth Network Monitor with security updates:
+    
+    | Version | Supported          |
+    | ------- | ------------------ |
+    | 1.0.x   | :white_check_mark: |
+    
+    ### Reporting a Vulnerability
+    Please report suspected security vulnerabilities to security@stealth-monitor.com. You will receive a response from us within 48 hours. If the issue is confirmed, we will release a patch as soon as possible depending on complexity but historically within a few days.
+
+# Code of conduct
+code_of_conduct:
+  community_file: "CODE_OF_CONDUCT.md"
+  contact_email: "conduct@stealth-monitor.com"
+
+# Contributing guidelines
+contributing:
+  contributing_file: "CONTRIBUTING.md"
+  code_review: true
+  commit_convention: "Conventional Commits"
+
+# Wiki settings
+wiki:
+  enabled: true
+  sidebar: "Project Documentation"
+
+# Projects
+projects:
+  enabled: true
+  automation: true
+
+# Dependency graph
+dependency_graph:
+  enabled: true
+
+# Dependabot
+dependabot:
+  package_ecosystem: "pip"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open_pull_requests_limit: 10
+  reviewers:
+    - "project-maintainer"
+  assignees:
+    - "project-maintainer"
+
+# Security features
+security_features:
+  dependency_review: true
+  secret_scanning: true
+  codeql: true
+  dependabot_security_updates: true
+
+# Repository topics
+topics:
+  - android
+  - python
+  - network-monitoring
+  - parental-control
+  - kivy
+  - termux
+  - apk
+  - monitoring
+  - security
+  - network
+  - behavioral-analysis
+  - privacy
+  - mobile-app
+  - cross-platform
+
+# Repository description
+description: "Advanced Android network monitoring and parental control system with real-time analysis and behavioral insights"
+website: ""
