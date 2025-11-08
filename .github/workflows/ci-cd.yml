@@ -92,11 +92,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
-    env:
-      # Force buildozer to use pre-installed Android SDK
-      ANDROID_SDK_ROOT: ${{ steps.setup-android.outputs.sdk-path }}
-      ANDROID_NDK_HOME: ${{ steps.setup-android.outputs.ndk-path }}
-    
     steps:
     - uses: actions/checkout@v4
     
