@@ -325,7 +325,8 @@ jobs:
         
         # Build with buildozer using forced SDK configuration
         echo "=== Running buildozer android debug ==="
-        buildozer ANDROID_HOME="$ANDROID_HOME" ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" ANDROID_NDK_HOME="$ANDROID_NDK_HOME" android debug
+        # Set environment variables and run buildozer
+        ANDROID_HOME="$ANDROID_HOME" ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" ANDROID_NDK_HOME="$ANDROID_NDK_HOME" buildozer android debug
     
     - name: Check if APK was created
       run: |
