@@ -92,6 +92,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
+    env:
+      # Force buildozer to use pre-installed Android SDK
+      ANDROID_SDK_ROOT: ${{ steps.setup-android.outputs.sdk-path }}
+      ANDROID_NDK_HOME: ${{ steps.setup-android.outputs.ndk-path }}
+    
     steps:
     - uses: actions/checkout@v4
     
@@ -294,12 +299,10 @@ jobs:
     - name: Build Android APK
       id: build
       run: |
-        echo "=== Building Android APK with forced SDK usage ==="
+        echo "=== Building Android APK with global environment ==="
         
         # Set up environment variables directly from setup-android action
         export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
-        export ANDROID_SDK_ROOT="${{ steps.setup-android.outputs.sdk-path }}"
-        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
         export PATH="${{ steps.setup-android.outputs.sdk-path }}/platform-tools:${{ steps.setup-android.outputs.sdk-path }}/tools:${{ steps.setup-android.outputs.sdk-path }}/tools/bin:${{ steps.setup-android.outputs.sdk-path }}/build-tools/28.0.3:$PATH"
         
         echo "=== Environment variables set ==="
@@ -314,8 +317,14 @@ jobs:
         if [ -f "$AIDL_PATH" ]; then
           echo "✅ aidl tool found at: $AIDL_PATH"
         else
-          echo "❌ aidl tool not found, build will likely fail"
-          ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "No build-tools directory"
+          echo "❌ aidl tool not found, checking alternative locations..."
+          for dir in $ANDROID_HOME/build-tools/*/; do
+            if [ -f "${dir}aidl" ]; then
+              echo "✅ Found aidl in: $dir"
+              export PATH=$PATH:$dir
+              break
+            fi
+          done
         fi
         
         # Accept licenses to prevent any buildozer issues
@@ -323,10 +332,9 @@ jobs:
         yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses 2>/dev/null || true
         yes | sdkmanager --licenses 2>/dev/null || true
         
-        # Build with buildozer using forced SDK configuration
+        # Simple buildozer command - environment variables are set globally
         echo "=== Running buildozer android debug ==="
-        # Set environment variables and run buildozer
-        ANDROID_HOME="$ANDROID_HOME" ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" ANDROID_NDK_HOME="$ANDROID_NDK_HOME" buildozer android debug
+        buildozer android debug
     
     - name: Check if APK was created
       run: |
