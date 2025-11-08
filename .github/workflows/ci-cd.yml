@@ -172,8 +172,8 @@ jobs:
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         
-        # Accept licenses with automatic yes to all prompts
-        yes | sdkmanager --licenses || true
+        # Create a simple yes file to accept all licenses automatically
+        printf "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n" | sdkmanager --licenses || true
         echo "=== All licenses accepted ==="
     
     - name: Install minimal build-tools only
@@ -270,65 +270,22 @@ jobs:
         echo "=== Installed SDK packages ==="
         sdkmanager --list_installed 2>/dev/null || echo "sdkmanager check failed but continuing"
     
-    - name: Clean previous build artifacts and setup buildozer
+    - name: Clean previous build artifacts
       run: |
         echo "=== Cleaning previous artifacts ==="
         rm -rf .buildozer .buildozer_global
         rm -rf bin/
-        
-        echo "=== Setting up buildozer to use existing Android SDK ==="
-        # Set environment variables for buildozer
-        export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
-        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
-        export ANDROID_API=28
-        export ANDROID_ARCH=arm64-v8a
-        
-        echo "ANDROID_HOME set to: $ANDROID_HOME"
-        echo "ANDROID_NDK_HOME set to: $ANDROID_NDK_HOME"
-        echo "ANDROID_SDK_ROOT set to: $ANDROID_HOME"
-        
-        # Set both ANDROID_HOME and ANDROID_SDK_ROOT for compatibility
-        export ANDROID_SDK_ROOT="$ANDROID_HOME"
-        
-        # Initialize buildozer with existing SDK
-        echo "=== Initializing buildozer with existing SDK ==="
-        buildozer android clean || true
-        
-        # Create or update buildozer global config to use existing SDK
-        echo "=== Configuring buildozer to use existing Android SDK ==="
-        mkdir -p ~/.buildozer_global
-        
-        cat > ~/.buildozer_global/android.env << EOF
-[DEFAULT]
-sdk_path = $ANDROID_HOME
-ndk_path = $ANDROID_NDK_HOME
-api_level = 28
-EOF
-        
-        echo "=== Buildozer global config created ==="
-        cat ~/.buildozer_global/android.env
-        
-        # List the SDK path buildozer is using
-        echo "=== Buildozer SDK configuration ==="
-        buildozer --version || true
+        echo "=== Clean complete ==="
     
-    - name: Build Android APK with existing SDK
+    - name: Build Android APK
       id: build
       run: |
-        # Ensure environment variables are set
-        export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
-        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
-        export ANDROID_SDK_ROOT="${{ steps.setup-android.outputs.sdk-path }}"
-        export ANDROID_API=28
-        
-        echo "=== Starting buildozer build with existing Android SDK ==="
+        echo "=== Starting buildozer build ==="
         echo "Current directory: $(pwd)"
         echo "ANDROID_HOME: $ANDROID_HOME"
-        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
         echo "PATH: $PATH"
         echo "=== Starting buildozer android debug ==="
-        # Use verbose logging to see what's happening
-        buildozer --log-level=2 android debug -- --quiet || buildozer android debug
+        buildozer android debug
     
     - name: Check if APK was created
       run: |
