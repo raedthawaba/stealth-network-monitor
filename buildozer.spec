@@ -44,6 +44,11 @@ android.api = 28
 # (str) Android build tools version to use, must match existing installation
 android.build_tools_version = 28.0.3
 
+
+
+# (bool) — Don't ask to download the闲置依赖项s even if needed
+android.download_ignore_cache_version = False
+
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
 
@@ -51,10 +56,10 @@ android.private_storage = True
 android.theme = "@android:style/Theme.NoTitleBar"
 
 # (str) Android SDK path (will be overridden in CI/CD)
-# android.sdk_path = /path/to/android-sdk
+android.sdk_path = 
 
 # (str) Android NDK path (will be overridden in CI/CD)
-# android.ndk_path = /path/to/android-ndk
+android.ndk_path = 
 
 # (list) Pattern to whitelist for the whole project
 android.whitelist = 

@@ -343,46 +343,13 @@ jobs:
         echo "=== Final license acceptance ==="
         timeout 10s bash -c 'yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses' 2>/dev/null || echo "License acceptance completed"
         
-        # Force buildozer to use the pre-installed SDK by creating comprehensive config
-        echo "=== Creating buildozer global config to use pre-installed SDK ==="
-        mkdir -p ~/.buildozer_global
-        
-        # Create comprehensive config with echo commands to avoid YAML heredoc issues
-        echo "[app]" > ~/.buildozer_global/global_config.ini
-        echo "# Force build tools version to prevent buildozer from trying to install newer versions" >> ~/.buildozer_global/global_config.ini
-        echo "android.build_tools_version = 28.0.3" >> ~/.buildozer_global/global_config.ini
-        echo "# Force API version" >> ~/.buildozer_global/global_config.ini
-        echo "android.api = 28" >> ~/.buildozer_global/global_config.ini
-        echo "# Force minimal API" >> ~/.buildozer_global/global_config.ini
-        echo "android.minapi = 21" >> ~/.buildozer_global/global_config.ini
-        echo "# Force NDK API" >> ~/.buildozer_global/global_config.ini
-        echo "android.ndk_api = 21" >> ~/.buildozer_global/global_config.ini
-        echo "# Force SDK path to pre-installed SDK" >> ~/.buildozer_global/global_config.ini
-        echo "android.sdk_path = /opt/android-sdk" >> ~/.buildozer_global/global_config.ini
-        echo "android.ndk_path = /opt/android-ndk" >> ~/.buildozer_global/global_config.ini
-        echo "" >> ~/.buildozer_global/global_config.ini
-        echo "[buildozer]" >> ~/.buildozer_global/global_config.ini
-        echo "# Force log level for debugging" >> ~/.buildozer_global/global_config.ini
-        echo "log_level = 2" >> ~/.buildozer_global/global_config.ini
-        echo "# Disable download cache to prevent SDK downloads" >> ~/.buildozer_global/global_config.ini
-        echo "android.download_ignore_cache_version = True" >> ~/.buildozer_global/global_config.ini
-        echo "# Force using existing build tools" >> ~/.buildozer_global/global_config.ini
-        echo "android.copy_libs = 1" >> ~/.buildozer_global/global_config.ini
-        echo "# Disable AndroidX to prevent extra downloads" >> ~/.buildozer_global/global_config.ini
-        echo "android.enable_androidx = False" >> ~/.buildozer_global/global_config.ini
-        echo "# Disable Gradle plugin to prevent extra downloads" >> ~/.buildozer_global/global_config.ini
-        echo "android.enable_gradle_plugin_build = False" >> ~/.buildozer_global/global_config.ini
-        
-        echo "=== Buildozer global config created ==="
-        cat ~/.buildozer_global/global_config.ini
-        
         # Destroy any existing buildozer SDK installation to force use of pre-installed SDK
         echo "=== Destroying any existing buildozer SDK to force use of pre-installed SDK ==="
         rm -rf $HOME/.buildozer/android/platform/android-sdk 2>/dev/null || true
         rm -rf $HOME/.buildozer/android/platform/android-ndk 2>/dev/null || true
         
-        # Run buildozer with forced environment and NO SDK installation attempts
-        echo "=== Running buildozer android debug with FORCED use of pre-installed SDK ==="
+        # Run buildozer with forced environment and command line arguments to bypass all config
+        echo "=== Running buildozer android debug with FORCE command line arguments ==="
         echo "Current environment:"
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
@@ -402,9 +369,27 @@ jobs:
           find $ANDROID_HOME/build-tools -name "aidl" -type f 2>/dev/null || echo "No aidl found in any build-tools version"
         fi
         
-        # Run buildozer with verbose and specific environment forcing
-        echo "=== EXECUTING BUILDOZER (will use pre-installed SDK) ==="
-        buildozer android debug --verbose
+        # DESTROY any existing buildozer cache and SDK to force use of system SDK
+        echo "=== DESTROYING all buildozer cache and SDK installations ==="
+        rm -rf $HOME/.buildozer 2>/dev/null || true
+        rm -rf ~/.buildozer_global 2>/dev/null || true
+        rm -rf ~/.cache/buildozer 2>/dev/null || true
+        rm -rf .buildozer 2>/dev/null || true
+        
+        # Use system Android SDK explicitly via environment and command line
+        echo "=== EXECUTING BUILDOZER with system SDK (BYPASS ALL CONFIGS) ==="
+        # Force buildozer to use system Android SDK completely
+        ANDROID_SDK_ROOT=$ANDROID_HOME \
+        ANDROID_HOME=$ANDROID_HOME \
+        ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
+        PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
+        buildozer --android.api=28 \
+                 --android.build_tools_version=28.0.3 \
+                 --android.sdk_path="$ANDROID_HOME" \
+                 --android.ndk_path="$ANDROID_NDK_HOME" \
+                 --android.minapi=21 \
+                 --android.ndk_api=21 \
+                 android debug --verbose
     
     - name: Check if APK was created
       run: |
