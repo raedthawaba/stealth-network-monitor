@@ -206,13 +206,22 @@ jobs:
     
     - name: Set up Android environment and verify aidl
       run: |
-        # Set up environment variables
-        echo "ANDROID_HOME=${{ steps.setup-android.outputs.sdk-path }}" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=${{ steps.setup-android.outputs.ndk-path }}" >> $GITHUB_ENV
-        echo "${{ steps.setup-android.outputs.sdk-path }}/platform-tools" >> $GITHUB_PATH
-        echo "${{ steps.setup-android.outputs.sdk-path }}/tools" >> $GITHUB_PATH
-        echo "${{ steps.setup-android.outputs.sdk-path }}/tools/bin" >> $GITHUB_PATH
-        echo "${{ steps.setup-android.outputs.sdk-path }}/build-tools/28.0.3" >> $GITHUB_PATH
+        # Set up environment variables directly
+        export ANDROID_HOME="/usr/local/lib/android/sdk"
+        export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
+        export ANDROID_NDK_HOME="/usr/local/lib/android/ndk/25.1.8937393"
+        
+        # Set environment variables for subsequent steps
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_PATH
+        
+        # Add Android SDK paths to PATH
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/tools" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/build-tools/28.0.3" >> $GITHUB_PATH
         
         echo "=== Android environment set up ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
@@ -291,14 +300,13 @@ jobs:
     - name: Build Android APK
       id: build
       run: |
-        echo "=== Building Android APK with global environment ==="
+        echo "=== Building Android APK with direct environment setup ==="
         
-        # Set up environment variables from setup-android action
-        ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
-        ANDROID_SDK_ROOT="$ANDROID_HOME"
-        ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
-        export ANDROID_HOME ANDROID_SDK_ROOT ANDROID_NDK_HOME
-        export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH"
+        # Set up environment variables directly (not from action outputs)
+        export ANDROID_HOME="/usr/local/lib/android/sdk"
+        export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
+        export ANDROID_NDK_HOME="/usr/local/lib/android/ndk/25.1.8937393"
+        export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_NDK_HOME:$PATH"
         
         echo "=== Environment variables set ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
