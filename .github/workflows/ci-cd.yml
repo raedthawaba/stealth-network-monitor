@@ -165,14 +165,22 @@ jobs:
         build-tools-version: 28.0.3
         ndk-version: "25.1.8937393"
     
-    - name: Install additional build-tools if needed
+    - name: Accept all Android licenses first
       run: |
-        echo "=== Installing additional build-tools versions ==="
-        # Try to install multiple build-tools versions for compatibility
-        for version in 30.0.3 28.0.2 29.0.3 28.0.1; do
-          echo "Installing build-tools;$version"
-          sdkmanager "build-tools;$version" 2>/dev/null || echo "Failed to install build-tools;$version but continuing"
-        done
+        echo "=== Accepting all Android SDK licenses ==="
+        # Accept all licenses before any installation
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        
+        # Accept licenses with automatic yes to all prompts
+        yes | sdkmanager --licenses || true
+        echo "=== All licenses accepted ==="
+    
+    - name: Install minimal build-tools only
+      run: |
+        echo "=== Installing minimal build-tools only ==="
+        # Only install the specific version we need, not multiple versions
+        sdkmanager "build-tools;28.0.3"
         echo "=== Build-tools installation complete ==="
     
     - name: Set up Android environment and verify aidl
@@ -190,74 +198,24 @@ jobs:
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "PATH: $PATH"
         
-        # Force accept all licenses
-        echo "=== Accepting Android licenses ==="
+        # Re-accept licenses to be safe
+        echo "=== Re-accepting Android licenses ==="
         yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
         
-        # Install required components
-        echo "=== Installing additional components ==="
-        sdkmanager "platform-tools" "build-tools;28.0.3"
-        
-        # Find and verify aidl tool with multiple fallback options
+        # Verify aidl tool
         echo "=== Verifying aidl tool ==="
-        AIDL_FOUND=false
-        
-        # Try multiple build-tools versions and locations
-        for version in 28.0.3 30.0.3 28.0.2 29.0.3; do
-          AIDL_PATH="$ANDROID_HOME/build-tools/$version/aidl"
-          if [ -f "$AIDL_PATH" ]; then
-            echo "✅ Found aidl tool at: $AIDL_PATH"
-            export PATH=$PATH:$ANDROID_HOME/build-tools/$version
-            echo "$AIDL_PATH --version"
-            $AIDL_PATH --version 2>/dev/null || echo "aidl version check failed, but tool exists"
-            AIDL_FOUND=true
-            echo "Using build-tools version: $version"
-            break
-          else
-            echo "❌ aidl tool not found at: $AIDL_PATH"
-          fi
-        done
-        
-        # Alternative: try to find aidl in any build-tools directory
-        if [ "$AIDL_FOUND" = "false" ]; then
-          echo "=== Searching for aidl in all build-tools directories ==="
-          for build_tools_dir in $ANDROID_HOME/build-tools/*/; do
-            if [ -f "${build_tools_dir}aidl" ]; then
-              echo "✅ Found aidl in: $build_tools_dir"
-              version=$(basename "$build_tools_dir")
-              export PATH=$PATH:$build_tools_dir
-              echo "$build_tools_dir/aidl --version"
-              $build_tools_dir/aidl --version 2>/dev/null || echo "aidl version check failed, but tool exists"
-              echo "Using build-tools version: $version"
-              AIDL_FOUND=true
-              break
-            fi
-          done
-        fi
-        
-        # Alternative: install via sdkmanager if not found
-        if [ "$AIDL_FOUND" = "false" ]; then
-          echo "=== aidl not found in build-tools, trying sdkmanager ==="
-          sdkmanager "build-tools;28.0.3"
-          
-          # Check again after installation
-          AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
-          if [ -f "$AIDL_PATH" ]; then
-            export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
-            echo "✅ Found aidl after sdkmanager installation: $AIDL_PATH"
-            $AIDL_PATH --version 2>/dev/null || echo "aidl version check failed, but tool exists"
-            AIDL_FOUND=true
-          fi
-        fi
-        
-        # Final check - if still not found, we continue but warn
-        if [ "$AIDL_FOUND" = "false" ]; then
-          echo "⚠️ Warning: aidl tool not found, but continuing build..."
-          echo "This might cause issues during compilation"
-          echo "Available build tools:"
-          ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "No build tools directory found"
+        AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
+        if [ -f "$AIDL_PATH" ]; then
+          echo "✅ Found aidl tool at: $AIDL_PATH"
+          export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
+          # Test if aidl works
+          echo "Testing aidl tool..."
+          $AIDL_PATH --version 2>/dev/null || echo "aidl version check failed, but tool exists"
         else
-          echo "✅ aidl tool successfully configured"
+          echo "❌ aidl tool not found at: $AIDL_PATH"
+          echo "Available build tools:"
+          ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "No build tools found"
+          echo "Warning: aidl not found, but continuing build..."
         fi
     
     - name: Install Python dependencies
@@ -274,36 +232,25 @@ jobs:
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "PATH includes: $PATH"
         
-        # Check that aidl is available (this is the tool that was missing)
-        if command -v aidl &> /dev/null; then
-          echo "✅ aidl tool found in PATH"
-          aidl --version 2>/dev/null || echo "aidl tool exists but version check failed"
+        # Simple aidl check
+        AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
+        if [ -f "$AIDL_PATH" ]; then
+          echo "✅ aidl tool found at: $AIDL_PATH"
+          export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
         else
-          echo "⚠️ aidl tool not found in PATH"
-          # Try to find it in build-tools directories
-          AIDL_FOUND=false
+          echo "⚠️ aidl tool not found, checking alternative locations..."
           for build_tools_dir in $ANDROID_HOME/build-tools/*/; do
             if [ -f "${build_tools_dir}aidl" ]; then
               echo "✅ Found aidl in: $build_tools_dir"
-              version=$(basename "$build_tools_dir")
               export PATH=$PATH:$build_tools_dir
-              ${build_tools_dir}aidl --version 2>/dev/null || echo "aidl tool exists but version check failed"
-              AIDL_FOUND=true
               break
             fi
           done
-          
-          if [ "$AIDL_FOUND" = "false" ]; then
-            echo "❌ aidl tool not found in any build-tools directory"
-            echo "Available build tools:"
-            ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "No build tools directory"
-            echo "Continuing build anyway - aidl may be available during compilation"
-          fi
         fi
         
         # List installed packages
         echo "=== Installed SDK packages ==="
-        sdkmanager --list_installed 2>/dev/null || echo "sdkmanager --list_installed failed but continuing"
+        sdkmanager --list_installed 2>/dev/null || echo "sdkmanager check failed but continuing"
     
     - name: Clean previous build artifacts
       run: |
