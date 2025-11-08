@@ -314,10 +314,11 @@ jobs:
       run: |
         echo "=== Building Android APK with global environment ==="
         
-        # Set up environment variables directly from setup-android action
-        export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
-        export ANDROID_SDK_ROOT="$ANDROID_HOME"
-        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
+        # Set up environment variables from setup-android action
+        ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
+        ANDROID_SDK_ROOT="$ANDROID_HOME"
+        ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
+        export ANDROID_HOME ANDROID_SDK_ROOT ANDROID_NDK_HOME
         export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$PATH"
         
         echo "=== Environment variables set ==="
@@ -356,24 +357,24 @@ jobs:
         # Force buildozer to use the pre-installed SDK by creating config
         echo "=== Creating buildozer global config to use pre-installed SDK ==="
         mkdir -p ~/.buildozer_global
-        cat > ~/.buildozer_global/global_config.ini << EOF
-[app]
-# Android configuration
-android.api = 28
-android.minapi = 21
-android.ndk_api = 21
-android.sdk_path = $ANDROID_HOME
-android.ndk_path = $ANDROID_NDK_HOME
-android.release_keystore = ~/.android/debug.keystore
-android.debug_keystore = ~/.android/debug.keystore
-android.keystore_alias = androiddebugkey
-android.keystore_password = android
-android.keystore_alias_password = android
-EOF
+        
+        # Use echo commands instead of heredoc to avoid YAML syntax issues
+        echo "[app]" > ~/.buildozer_global/global_config.ini
+        echo "# Android configuration" >> ~/.buildozer_global/global_config.ini
+        echo "android.api = 28" >> ~/.buildozer_global/global_config.ini
+        echo "android.minapi = 21" >> ~/.buildozer_global/global_config.ini
+        echo "android.ndk_api = 21" >> ~/.buildozer_global/global_config.ini
+        echo "android.sdk_path = ${ANDROID_HOME}" >> ~/.buildozer_global/global_config.ini
+        echo "android.ndk_path = ${ANDROID_NDK_HOME}" >> ~/.buildozer_global/global_config.ini
+        echo "android.release_keystore = ~/.android/debug.keystore" >> ~/.buildozer_global/global_config.ini
+        echo "android.debug_keystore = ~/.android/debug.keystore" >> ~/.buildozer_global/global_config.ini
+        echo "android.keystore_alias = androiddebugkey" >> ~/.buildozer_global/global_config.ini
+        echo "android.keystore_password = android" >> ~/.buildozer_global/global_config.ini
+        echo "android.keystore_alias_password = android" >> ~/.buildozer_global/global_config.ini
         
         # Simple buildozer command with environment variables
         echo "=== Running buildozer android debug with forced SDK usage ==="
-        ANDROID_HOME="$ANDROID_HOME" ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" buildozer android debug
+        buildozer android debug
     
     - name: Check if APK was created
       run: |
