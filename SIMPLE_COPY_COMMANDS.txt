@@ -1,0 +1,24 @@
+🚨 أوامر بسيطة للنسخ من البيئة إلى جهازك:
+
+1. انسخ مجلد: /workspace/stealth-network-monitor/
+   كاملاً إلى جهازك المحلي
+
+2. أو من خلال الأوامر:
+   # نقل المجلد (للمطورين المتقدمين)
+   scp -r /workspace/stealth-network-monitor/ user@your-computer:/path/to/github/
+
+   # أو استخدم File Manager انسخ/ألصق
+
+3. في مجلد النسخ على جهازك:
+   git init
+   git add .
+   git commit -m "Initial commit: Stealth Network Monitor"
+   git branch -M main
+   git remote add origin https://github.com/YOUR_USERNAME/stealth-network-monitor.git
+   git push -u origin main
+
+4. ✅ تم! مستودع GitHub جاهز
+
+المجلد يحتوي على 19 ملف وأدلة كاملة
+حجم المستودع: ~120KB
+جاهز للنشر فوراً!

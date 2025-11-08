@@ -1,0 +1,93 @@
+{
+  "children": [
+    {
+      "name": "الطفل الأول",
+      "ip": "10.0.7.13",
+      "age": 10,
+      "daily_limit_hours": 2,
+      "allowed_websites": ["google.com", "youtube.com", "wikipedia.org", "khanacademy.org"],
+      "blocked_keywords": [
+        "منتهي", "إباحي", "عنف", "مخدرات", "فbation", "Casino", "Gambling", "Porn", "Hate", "Violence"
+      ],
+      "blocked_apps": ["Instagram", "TikTok", "Snapchat", "Facebook", "Telegram"],
+      "safe_search": true,
+      "report_parent_only": true
+    },
+    {
+      "name": "الطفل الثاني", 
+      "ip": "10.0.7.20",
+      "age": 12,
+      "daily_limit_hours": 2.5,
+      "allowed_websites": [
+        "google.com", "youtube.com", "wikipedia.org", "khanacademy.org", "duolingo.com"
+      ],
+      "blocked_keywords": [
+        "منتهي", "إباحي", "عنف", "مخدرات", "فbation", "Casino", "Gambling", "Porn", "Hate", "Violence", "Drugs", "Adult"
+      ],
+      "blocked_apps": ["Instagram", "TikTok", "Snapchat", "Telegram", "WhatsApp", "Discord"],
+      "safe_search": true,
+      "report_parent_only": true
+    },
+    {
+      "name": "الطفل الثالث",
+      "ip": "10.0.7.23",
+      "age": 8,
+      "daily_limit_hours": 1.5,
+      "allowed_websites": ["google.com", "youtube.com", "wikipedia.org", "pbskids.org"],
+      "blocked_keywords": [
+        "منتهي", "إباحي", "عنف", "مخدرات", "فbation", "Casino", "Gambling", "Porn", "Hate", "Violence", "Scary", "Gory"
+      ],
+      "blocked_apps": ["Instagram", "TikTok", "Snapchat", "Facebook", "Telegram", "WhatsApp"],
+      "safe_search": true,
+      "report_parent_only": true
+    },
+    {
+      "name": "الطفل الرابع",
+      "ip": "10.0.7.54",
+      "age": 15,
+      "daily_limit_hours": 3,
+      "allowed_websites": ["google.com", "youtube.com", "wikipedia.org", "khanacademy.org", "coursera.org"],
+      "blocked_keywords": [
+        "منتهي", "إباحي", "عنف", "مخدرات", "فbation", "Casino", "Gambling", "Porn", "Hate", "Violence", "Drugs", "Adult"
+      ],
+      "blocked_apps": ["Instagram", "TikTok", "Snapchat", "Telegram", "WhatsApp", "Discord"],
+      "safe_search": true,
+      "report_parent_only": true
+    },
+    {
+      "name": "الطفل الخامس",
+      "ip": "10.0.7.56",
+      "age": 11,
+      "daily_limit_hours": 2,
+      "allowed_websites": ["google.com", "youtube.com", "wikipedia.org", "khanacademy.org", "scratch.mit.edu"],
+      "blocked_keywords": [
+        "منتهي", "إباحي", "عنف", "مخدرات", "فbation", "Casino", "Gambling", "Porn", "Hate", "Violence"
+      ],
+      "blocked_apps": ["Instagram", "TikTok", "Snapchat", "Facebook", "Telegram", "WhatsApp"],
+      "safe_search": true,
+      "report_parent_only": true
+    },
+    {
+      "name": "الطفل السادس",
+      "ip": "10.0.7.85",
+      "age": 9,
+      "daily_limit_hours": 1.5,
+      "allowed_websites": ["google.com", "youtube.com", "wikipedia.org", "pbskids.org", "abcmouse.com"],
+      "blocked_keywords": [
+        "منتهي", "إباحي", "عنف", "مخدرات", "فbation", "Casino", "Gambling", "Porn", "Hate", "Violence", "Scary", "Gory"
+      ],
+      "blocked_apps": ["Instagram", "TikTok", "Snapchat", "Facebook", "Telegram", "WhatsApp"],
+      "safe_search": true,
+      "report_parent_only": true
+    }
+  ],
+  "monitoring_settings": {
+    "scan_interval_minutes": 1,
+    "log_to_file": true,
+    "stealth_mode": true,
+    "background_monitoring": true,
+    "real_time_alerts": true,
+    "daily_reports": true,
+    "weekly_summaries": true
+  }
+}

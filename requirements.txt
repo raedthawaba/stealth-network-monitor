@@ -1,0 +1,17 @@
+# requirements.txt - متطلبات تطبيق Termux
+# مُطور بواسطة MiniMax Agent
+
+# الخادم الأساسي
+Flask==3.0.0
+
+# أدوات إضافية مفيدة
+requests==2.31.0
+psutil==5.9.6
+Werkzeug==3.0.1
+
+# للتطوير والاختبار (اختياري)
+pytest==7.4.3
+pytest-flask==1.3.0
+
+# ملاحظة: تأكد من تثبيت هذه الحزم في Termux باستخدام:
+# pip install -r requirements.txt

@@ -1,0 +1,86 @@
+{
+  "mobile_settings": {
+    "device_type": "android",
+    "run_in_background": true,
+    "stealth_mode": true,
+    "notification_to_child": false
+  },
+  "monitoring": {
+    "app_monitoring": true,
+    "web_monitoring": true,
+    "time_restrictions": true,
+    "location_tracking": false
+  },
+  "children": [
+    {
+      "id": 1,
+      "name": "احمد",
+      "age": 12,
+      "device_id": "android_device_001"
+    },
+    {
+      "id": 2, 
+      "name": "فاطمة",
+      "age": 9,
+      "device_id": "android_device_002"
+    },
+    {
+      "id": 3,
+      "name": "محمد",
+      "age": 15,
+      "device_id": "android_device_003"
+    }
+  ],
+  "monitoring_rules": {
+    "blocked_apps": [
+      "instagram",
+      "tiktok", 
+      "snapchat",
+      "telegram",
+      "whatsapp",
+      "youtube"
+    ],
+    "blocked_keywords": [
+      "منتهي",
+      "إباحي",
+      "مؤثر",
+      "قاتل",
+      "عنف",
+      "مخدرات",
+      "كحول",
+      "تدخين",
+      "انتحار",
+      "تنمر",
+      "كراهية"
+    ],
+    "warning_keywords": [
+      "لعبة",
+      "فيديو",
+      "موسيقى",
+      "تريلر",
+      "مقاطع",
+      "أفلام"
+    ],
+    "time_limits": {
+      "weekday": 3,
+      "weekend": 4
+    },
+    "safe_search": true,
+    "educational_apps": [
+      "khanacademy",
+      "duolingo",
+      "scratch",
+      "code.org"
+    ]
+  },
+  "alerts": {
+    "auto_block": true,
+    "log_suspicious": true,
+    "parent_notification": true
+  },
+  "privacy": {
+    "local_storage_only": true,
+    "data_retention_days": 30,
+    "encrypt_data": false
+  }
+}

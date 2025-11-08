@@ -1,0 +1,38 @@
+# pubspec.yaml - إعدادات مشروع Flutter
+# مُطور بواسطة MiniMax Agent
+
+name: flutter_counter_app
+description: تطبيق عداد بسيط مُطور باستخدام Flutter في Termux
+publish_to: 'none' # إزالة هذا السطر إذا كنت تريد نشر التطبيق
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  # إضافة الأصول (assets)
+  assets:
+    # يمكن إضافة صور هنا
+    # - images/
+    # - icons/
+
+  # الخطوط
+  fonts:
+    # يمكن إضافة خطوط مخصصة هنا
+    # - family: Cairo
+    #   fonts:
+    #     - asset: fonts/Cairo-Regular.ttf
+    #     - asset: fonts/Cairo-Bold.ttf
+    #       weight: 700

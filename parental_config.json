@@ -1,0 +1,160 @@
+{
+  "system_settings": {
+    "network_range": "192.168.1.0/24",
+    "scan_interval": 30,
+    "log_level": "INFO",
+    "database_path": "parental_control.db",
+    "log_file": "parental_control.log"
+  },
+  "children": [
+    {
+      "id": 1,
+      "name": "أحمد",
+      "age_range": "10-14",
+      "device_ip": "192.168.1.101",
+      "device_type": "كمبيوتر",
+      "is_active": true,
+      "daily_screen_time_limit": 3,
+      "allowed_websites": [
+        "khanacademy.org",
+        "wikipedia.org",
+        "scratch.mit.edu"
+      ],
+      "blocked_categories": [
+        "adult",
+        "gambling",
+        "violence"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "فاطمة",
+      "age_range": "6-9",
+      "device_ip": "192.168.1.102",
+      "device_type": "جهاز لوحي",
+      "is_active": true,
+      "daily_screen_time_limit": 2,
+      "allowed_websites": [
+        "pbskids.org",
+        "sesamestreet.org",
+        "funbrain.com"
+      ],
+      "blocked_categories": [
+        "adult",
+        "gambling",
+        "violence",
+        "social_media"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "محمد",
+      "age_range": "15-17",
+      "device_ip": "192.168.1.103",
+      "device_type": "هاتف ذكي",
+      "is_active": true,
+      "daily_screen_time_limit": 4,
+      "allowed_websites": [
+        "khanacademy.org",
+        "wikipedia.org",
+        "coursera.org",
+        "edx.org",
+        "stackoverflow.com"
+      ],
+      "blocked_categories": [
+        "adult",
+        "gambling",
+        "violence",
+        "drugs"
+      ]
+    }
+  ],
+  "web_filtering": {
+    "safe_search_engines": [
+      "google.com/safe",
+      "bing.com/safe"
+    ],
+    "blocked_domains": [
+      "malware.com",
+      "phishing.net",
+      "adult-content.com",
+      "gambling-sites.com"
+    ],
+    "inappropriate_keywords": [
+      "adult", "explicit", "violence", "gambling",
+      "drugs", "alcohol", "tobacco", "suicide",
+      "hate speech", "cyberbullying"
+    ],
+    "time_restrictions": {
+      "weekdays": {
+        "start": "08:00",
+        "end": "20:00"
+      },
+      "weekends": {
+        "start": "09:00",
+        "end": "21:00"
+      }
+    }
+  },
+  "alerts": {
+    "notification_methods": {
+      "email": false,
+      "sms": false,
+      "console": true,
+      "log_file": true
+    },
+    "alert_thresholds": {
+      "inappropriate_searches": 2,
+      "blocked_website_attempts": 3,
+      "excessive_screen_time": 4,
+      "suspicious_activity": 1
+    },
+    "alert_levels": {
+      "low": "إشعار بسيط في السجل",
+      "medium": "تنبيه فوري للوالدين",
+      "high": "إشعار طوارئ فوري"
+    }
+  },
+  "educational_settings": {
+    "teach_digital_citizenship": true,
+    "weekly_reports": true,
+    "parental_discussion_topics": [
+      "الخصوصية على الإنترنت",
+      "التنمر الإلكتروني",
+      "مشاركة المعلومات الشخصية",
+      "البحث الآمن",
+      "التواصل الآمن"
+    ],
+    "recommended_websites": {
+      "educational": [
+        "khanacademy.org",
+        "wikipedia.org",
+        "scholastic.com"
+      ],
+      "safe_entertainment": [
+        "pbskids.org",
+        "sesamestreet.org",
+        "nickjr.com"
+      ],
+      "creative": [
+        "scratch.mit.edu",
+        "code.org",
+        "tynker.com"
+      ]
+    }
+  },
+  "privacy_protection": {
+    "data_retention_days": 30,
+    "anonymize_data": true,
+    "encrypted_storage": false,
+    "parent_only_access": true,
+    "child_privacy_notice": true
+  },
+  "reporting": {
+    "daily_reports": true,
+    "weekly_summaries": true,
+    "monthly_insights": true,
+    "export_formats": ["json", "csv", "pdf"],
+    "report_recipients": ["parent_email@domain.com"]
+  }
+}

@@ -1,0 +1,313 @@
+{
+  "system_settings": {
+    "network_range": "192.168.1.0/24",
+    "scan_interval": 30,
+    "log_level": "INFO",
+    "database_path": "advanced_parental_control.db",
+    "enhanced_monitoring": true,
+    "real_time_alerts": true,
+    "detailed_reporting": true
+  },
+  "children": [
+    {
+      "id": 1,
+      "name": "أحمد",
+      "age_range": "10-14",
+      "device_ip": "192.168.1.101",
+      "device_type": "كمبيوتر",
+      "is_active": true,
+      "daily_screen_time_limit": 3,
+      "parent_supervision_required": true,
+      "allowed_websites": [
+        "khanacademy.org",
+        "wikipedia.org",
+        "scratch.mit.edu",
+        "edx.org",
+        "coursera.org"
+      ],
+      "blocked_categories": [
+        "adult",
+        "gambling",
+        "violence",
+        "social_media"
+      ],
+      "suspicious_keywords": [
+        "hack",
+        "crack",
+        "cheat",
+        "pirate",
+        "torrent"
+      ],
+      "safe_search_engines": [
+        "google.com/safe",
+        "bing.com/safe",
+        "duckduckgo.com"
+      ],
+      "educational_goals": [
+        "تحسين المهارات الرياضية",
+        "تعلم البرمجة",
+        "دراسة العلوم"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "فاطمة",
+      "age_range": "6-9",
+      "device_ip": "192.168.1.102",
+      "device_type": "جهاز لوحي",
+      "is_active": true,
+      "daily_screen_time_limit": 2,
+      "parent_supervision_required": true,
+      "allowed_websites": [
+        "pbskids.org",
+        "sesamestreet.org",
+        "funbrain.com",
+        "abcmouse.com",
+        "brainpop.com"
+      ],
+      "blocked_categories": [
+        "adult",
+        "gambling",
+        "violence",
+        "social_media",
+        "games_violent"
+      ],
+      "suspicious_keywords": [
+        "fight",
+        "kill",
+        "blood",
+        "weapon"
+      ],
+      "safe_search_engines": [
+        "kids.yahoo.com",
+        "askkids.com"
+      ],
+      "educational_goals": [
+        "تعلم الحروف والأرقام",
+        "تطوير المهارات اللغوية",
+        "الألعاب التعليمية"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "محمد",
+      "age_range": "15-17",
+      "device_ip": "192.168.1.103",
+      "device_type": "هاتف ذكي",
+      "is_active": true,
+      "daily_screen_time_limit": 4,
+      "parent_supervision_required": false,
+      "allowed_websites": [
+        "khanacademy.org",
+        "wikipedia.org",
+        "coursera.org",
+        "edx.org",
+        "stackoverflow.com",
+        "github.com"
+      ],
+      "blocked_categories": [
+        "adult",
+        "gambling",
+        "violence",
+        "drugs",
+        "illegal_content"
+      ],
+      "suspicious_keywords": [
+        "cheat",
+        "hack",
+        "crack",
+        "pirate",
+        "torrent",
+        "proxy"
+      ],
+      "safe_search_engines": [
+        "google.com/safe",
+        "scholar.google.com"
+      ],
+      "educational_goals": [
+        "تحضير للجامعة",
+        "تعلم البرمجة المتقدمة",
+        "البحث الأكاديمي"
+      ],
+      "trusted_apps": [
+        "whatsapp",
+        "telegram",
+        "skype",
+        "zoom",
+        "microsoft teams"
+      ]
+    }
+  ],
+  "advanced_monitoring": {
+    "app_monitoring": {
+      "enabled": true,
+      "track_processes": true,
+      "monitor_browser_tabs": true,
+      "track_app_usage_time": true,
+      "alert_on_suspicious_apps": true,
+      "suspicious_apps": [
+        "torrent",
+        "proxy",
+        "vpn",
+        "tor",
+        "hack",
+        "crack",
+        "keylogger"
+      ]
+    },
+    "search_monitoring": {
+      "enabled": true,
+      "track_all_searches": true,
+      "monitor_search_history": true,
+      "analyze_search_intent": true,
+      "check_multiple_engines": true,
+      "inappropriate_keywords": [
+        "adult", "explicit", "violence", "gambling", "drugs",
+        "alcohol", "tobacco", "suicide", "hate speech", "cyberbullying",
+        "porn", "nude", "sex", "weapon", "bomb", "terrorist",
+        "hack", "crack", "cheat", "pirate", "illegal"
+      ],
+      "risk_levels": {
+        "low": "مصطلحات طبيعية أو تعليمية",
+        "medium": "مصطلحات تحتاج انتباه",
+        "high": "مصطلحات خطرة أو غير مناسبة"
+      }
+    },
+    "viewing_monitoring": {
+      "enabled": true,
+      "track_video_watching": true,
+      "monitor_social_media": true,
+      "track_website_visits": true,
+      "categorize_content": true,
+      "calculate_safety_score": true,
+      "content_categories": {
+        "educational": {
+          "sites": ["khanacademy.org", "wikipedia.org", "coursera.org", "edx.org"],
+          "safety_score": 0.9
+        },
+        "entertainment": {
+          "sites": ["youtube.com", "netflix.com", "disney.com"],
+          "safety_score": 0.7
+        },
+        "social": {
+          "sites": ["facebook.com", "instagram.com", "twitter.com"],
+          "safety_score": 0.5
+        },
+        "gaming": {
+          "sites": ["steampowered.com", "epicgames.com", "minecraft.net"],
+          "safety_score": 0.6
+        }
+      }
+    },
+    "network_monitoring": {
+      "enabled": true,
+      "track_all_connections": true,
+      "monitor_data_usage": true,
+      "detect_suspicious_activity": true,
+      "block_dangerous_sites": true,
+      "track_downloads": true,
+      "monitor_uploads": true
+    }
+  },
+  "alerts_system": {
+    "real_time_alerts": true,
+    "alert_levels": {
+      "info": "إشعار بسيط للمعلومات",
+      "warning": "تحذير يحتاج انتباه",
+      "danger": "خطر يتطلب تدخل فوري"
+    },
+    "alert_conditions": {
+      "inappropriate_search": {
+        "enabled": true,
+        "immediate_alert": true,
+        "escalate_after": 2
+      },
+      "blocked_content_attempt": {
+        "enabled": true,
+        "immediate_alert": true,
+        "block_and_alert": true
+      },
+      "suspicious_app": {
+        "enabled": true,
+        "immediate_alert": true,
+        "auto_close_app": true
+      },
+      "excessive_screen_time": {
+        "enabled": true,
+        "warning_at": "80%",
+        "block_at": "100%"
+      },
+      "unsafe_communication": {
+        "enabled": true,
+        "monitor_chat_apps": true,
+        "alert_on_strangers": true
+      }
+    },
+    "notification_methods": {
+      "console": true,
+      "log_file": true,
+      "email": false,
+      "sms": false,
+      "desktop_notification": true
+    }
+  },
+  "educational_features": {
+    "digital_citizenship_education": true,
+    "safety_awareness": true,
+    "parental_discussion_prompts": [
+      "مناقشة السلامة الرقمية",
+      "شرح أهمية الخصوصية",
+      "تحذير من التنمر الإلكتروني",
+      "تعليم البحث الآمن",
+      "مناقشة التواصل الآمن"
+    ],
+    "positive_reinforcement": {
+      "reward_safe_behavior": true,
+      "celebrate_educational_achievements": true,
+      "encourage_creative_activities": true
+    },
+    "age_appropriate_guidance": {
+      "6-9": {
+        "focus": "السلامة الأساسية والترفيه التعليمي",
+        "supervision": "عالية"
+      },
+      "10-14": {
+        "focus": "تطوير المهارات والتحكم المحدود",
+        "supervision": "متوسطة"
+      },
+      "15-17": {
+        "focus": "الاستعداد للجامعة والحقلال المحدود",
+        "supervision": "منخفضة"
+      }
+    }
+  },
+  "privacy_and_ethics": {
+    "data_retention_days": 30,
+    "anonymize_reports": true,
+    "child_privacy_notice": true,
+    "parental_transparency": true,
+    "ethical_guidelines": [
+      "احترم خصوصية الأطفال",
+      "استخدم البيانات للحماية فقط",
+      "تحدث مع الأطفال بصراحة",
+      "بناء الثقة وليس السيطرة",
+      "احترم قوانين الخصوصية"
+    ]
+  },
+  "reporting": {
+    "detailed_reports": true,
+    "daily_summaries": true,
+    "weekly_insights": true,
+    "monthly_analysis": true,
+    "report_sections": {
+      "device_overview": true,
+      "app_usage_statistics": true,
+      "search_analysis": true,
+      "content_safety_scores": true,
+      "network_activity": true,
+      "educational_progress": true,
+      "safety_recommendations": true
+    },
+    "export_formats": ["json", "pdf", "html"]
+  }
+}

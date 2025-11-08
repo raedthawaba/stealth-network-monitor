@@ -1,0 +1,30 @@
+# Stealth Network Monitor - Python Requirements
+
+# Core Framework
+kivy>=2.1.0
+kivymd>=1.1.1
+
+# Database (built-in, listed for reference)
+# sqlite3 (built-in to Python)
+
+# System Utilities (built-in, listed for reference) 
+# subprocess (built-in to Python)
+# json (built-in to Python) 
+# base64 (built-in to Python)
+# hashlib (built-in to Python)
+# time (built-in to Python)
+# os (built-in to Python)
+# threading (built-in to Python)
+
+# Development & Build Tools
+# buildozer (installed separately via pip)
+
+# Optional Enhancement Libraries (for desktop testing)
+# requests>=2.25.1
+# beautifulsoup4>=4.9.3
+# cryptography>=3.4.8
+# psutil>=5.8.0
+
+# Note: Some libraries are optional and may not be available in Termux
+# The application uses built-in Python modules and subprocess commands
+# for maximum compatibility with Android/Termux environment

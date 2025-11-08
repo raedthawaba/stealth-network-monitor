@@ -1,0 +1,1 @@
+./direct_device_check.sh: line 14: nmap: command not found
