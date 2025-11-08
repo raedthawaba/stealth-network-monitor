@@ -183,6 +183,24 @@ jobs:
         sdkmanager "build-tools;28.0.3"
         echo "=== Build-tools installation complete ==="
     
+    - name: Pre-accept all licenses for buildozer
+      run: |
+        echo "=== Pre-accepting all licenses to prevent buildozer issues ==="
+        # Accept all licenses to prevent buildozer from failing
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        
+        # Accept licenses for all possible Android components
+        yes | sdkmanager --licenses 2>/dev/null || true
+        
+        # Also accept for the buildozer SDK if it exists
+        if [ -d "$HOME/.buildozer/android/platform/android-sdk" ]; then
+          echo "Found buildozer SDK, accepting licenses there too"
+          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --licenses 2>/dev/null || true
+        fi
+        echo "=== License acceptance complete ==="
+    
     - name: Set up Android environment and verify aidl
       run: |
         # Set up environment variables
@@ -252,25 +270,65 @@ jobs:
         echo "=== Installed SDK packages ==="
         sdkmanager --list_installed 2>/dev/null || echo "sdkmanager check failed but continuing"
     
-    - name: Clean previous build artifacts
+    - name: Clean previous build artifacts and setup buildozer
       run: |
         echo "=== Cleaning previous artifacts ==="
         rm -rf .buildozer .buildozer_global
         rm -rf bin/
-        ls -la || echo "Directory is clean"
+        
+        echo "=== Setting up buildozer to use existing Android SDK ==="
+        # Set environment variables for buildozer
+        export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
+        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
+        export ANDROID_API=28
+        export ANDROID_ARCH=arm64-v8a
+        
+        echo "ANDROID_HOME set to: $ANDROID_HOME"
+        echo "ANDROID_NDK_HOME set to: $ANDROID_NDK_HOME"
+        echo "ANDROID_SDK_ROOT set to: $ANDROID_HOME"
+        
+        # Set both ANDROID_HOME and ANDROID_SDK_ROOT for compatibility
+        export ANDROID_SDK_ROOT="$ANDROID_HOME"
+        
+        # Initialize buildozer with existing SDK
+        echo "=== Initializing buildozer with existing SDK ==="
+        buildozer android clean || true
+        
+        # Create or update buildozer global config to use existing SDK
+        echo "=== Configuring buildozer to use existing Android SDK ==="
+        mkdir -p ~/.buildozer_global
+        
+        cat > ~/.buildozer_global/android.env << EOF
+[DEFAULT]
+sdk_path = $ANDROID_HOME
+ndk_path = $ANDROID_NDK_HOME
+api_level = 28
+EOF
+        
+        echo "=== Buildozer global config created ==="
+        cat ~/.buildozer_global/android.env
+        
+        # List the SDK path buildozer is using
+        echo "=== Buildozer SDK configuration ==="
+        buildozer --version || true
     
-    - name: Build Android APK
+    - name: Build Android APK with existing SDK
       id: build
       run: |
-        echo "=== Starting buildozer build ==="
+        # Ensure environment variables are set
+        export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
+        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
+        export ANDROID_SDK_ROOT="${{ steps.setup-android.outputs.sdk-path }}"
+        export ANDROID_API=28
+        
+        echo "=== Starting buildozer build with existing Android SDK ==="
         echo "Current directory: $(pwd)"
-        echo "Files in current directory:"
-        ls -la
-        echo "=== Android environment verification ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
         echo "PATH: $PATH"
         echo "=== Starting buildozer android debug ==="
-        buildozer --log-level=2 android debug
+        # Use verbose logging to see what's happening
+        buildozer --log-level=2 android debug -- --quiet || buildozer android debug
     
     - name: Check if APK was created
       run: |
