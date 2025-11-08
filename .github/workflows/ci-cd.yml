@@ -168,79 +168,89 @@ jobs:
         printf "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n" | sdkmanager --licenses || true
         echo "=== All licenses accepted ==="
     
-    - name: Setup Android SDK with proper aidl support
+    - name: Setup Android SDK with proper packages
       uses: android-actions/setup-android@v3
       with:
-        packages: "platform-tools;build-tools;android-30"
+        packages: "platform-tools;build-tools;android-28"
         accept-android-sdk-licenses: true
       env:
         SKIP_JDK_VERSION_CHECK: true
     
-    - name: Install build-tools (latest)
+    - name: Get latest build-tools version
+      id: get-build-tools
       run: |
-        echo "=== Installing build-tools (latest) ==="
-        # Install latest build-tools
-        sdkmanager "build-tools;latest"
-        echo "=== Build-tools installation complete ==="
+        echo "=== Finding latest build-tools version ==="
+        # Get the latest build-tools version
+        BUILD_TOOLS_VERSION=$(sdkmanager --list_installed | grep "build-tools" | head -1 | awk '{print $2}')
+        if [ -z "$BUILD_TOOLS_VERSION" ]; then
+          BUILD_TOOLS_VERSION=$(sdkmanager --list | grep "build-tools" | grep "latest" | head -1 | awk '{print $1}' | cut -d';' -f2)
+        fi
+        echo "build_tools_version=$BUILD_TOOLS_VERSION" >> $GITHUB_OUTPUT
+        echo "Using build-tools version: $BUILD_TOOLS_VERSION"
+        echo "$BUILD_TOOLS_VERSION" > $GITHUB_ENV/BUILD_TOOLS_VERSION
     
-    - name: Pre-accept all licenses for buildozer
-      run: |
-        echo "=== Pre-accepting all licenses to prevent buildozer issues ==="
-        # Accept all licenses to prevent buildozer from failing
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        
-        # Simple license acceptance with limited attempts and timeout to prevent hanging
-        echo "Accepting licenses with timeout protection..."
-        timeout 30s bash -c 'yes | sdkmanager --licenses' || echo "License acceptance completed or timed out"
-        echo "License acceptance attempt completed"
-        
-        # Create global license acceptance file to prevent future prompts
-        echo "Creating license files to prevent prompts..."
-        
-        # Create basic license acceptance file
-        mkdir -p ~/.android
-        echo "24389f8a3084100b7aa0cf2d05ab425e" > ~/.android/debug.keystore.lock 2>/dev/null || true
-        
-        echo "=== License acceptance complete ==="
+
     
     - name: Set up Android environment and verify aidl
       run: |
         # Set up environment variables directly
         export ANDROID_HOME="/usr/local/lib/android/sdk"
         export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
-        export ANDROID_NDK_HOME="/usr/local/lib/android/ndk/25.1.8937393"
+        
+        # Get the build-tools version from the previous step
+        if [ -f "$GITHUB_ENV/BUILD_TOOLS_VERSION" ]; then
+          export BUILD_TOOLS_VERSION=$(cat $GITHUB_ENV/BUILD_TOOLS_VERSION)
+        else
+          export BUILD_TOOLS_VERSION="latest"
+        fi
+        
+        # Find the actual build-tools directory
+        BUILD_TOOLS_DIR=$(ls -1d $ANDROID_HOME/build-tools/*/ 2>/dev/null | head -1 | xargs basename)
+        if [ -z "$BUILD_TOOLS_DIR" ]; then
+          echo "❌ No build-tools found"
+          exit 1
+        fi
+        
+        # Set NDK home (find any available NDK)
+        NDK_DIR=$(ls -1d $ANDROID_HOME/ndk-* 2>/dev/null | head -1)
+        if [ -z "$NDK_DIR" ]; then
+          echo "No NDK found, using empty NDK_HOME"
+          export ANDROID_NDK_HOME=""
+        else
+          export ANDROID_NDK_HOME="$NDK_DIR"
+        fi
         
         # Set environment variables for subsequent steps
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_PATH
+        echo "BUILD_TOOLS_VERSION=$BUILD_TOOLS_DIR" >> $GITHUB_ENV
+        echo "BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/$BUILD_TOOLS_DIR" >> $GITHUB_ENV
+        if [ -n "$ANDROID_NDK_HOME" ]; then
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_NDK_HOME" >> $GITHUB_PATH
+        fi
         
         # Add Android SDK paths to PATH
         echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
         echo "$ANDROID_HOME/tools" >> $GITHUB_PATH
         echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
         echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "$ANDROID_HOME/build-tools/28.0.3" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/build-tools/$BUILD_TOOLS_DIR" >> $GITHUB_PATH
         
         echo "=== Android environment set up ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "BUILD_TOOLS_DIR: $BUILD_TOOLS_DIR"
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "PATH: $PATH"
         
-        # Re-accept licenses to be safe
-        echo "=== Re-accepting Android licenses ==="
-        yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-        
         # Verify aidl tool
         echo "=== Verifying aidl tool ==="
-        AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
+        AIDL_PATH="$ANDROID_HOME/build-tools/$BUILD_TOOLS_DIR/aidl"
         if [ -f "$AIDL_PATH" ]; then
           echo "✅ Found aidl tool at: $AIDL_PATH"
-          export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
           # Test if aidl works
           echo "Testing aidl tool..."
-          $AIDL_PATH --version 2>/dev/null || echo "aidl version check failed, but tool exists"
+          $AIDL_PATH --version 2>/dev/null || echo "aidl version check completed"
         else
           echo "❌ aidl tool not found at: $AIDL_PATH"
           echo "Available build tools:"
@@ -260,13 +270,14 @@ jobs:
       run: |
         echo "=== Verifying Android SDK setup ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "BUILD_TOOLS_VERSION: $BUILD_TOOLS_VERSION"
         echo "PATH includes: $PATH"
         
-        # Simple aidl check
-        AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
+        # Verify aidl tool with dynamic path
+        AIDL_PATH="$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/aidl"
         if [ -f "$AIDL_PATH" ]; then
           echo "✅ aidl tool found at: $AIDL_PATH"
-          export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
+          export PATH=$PATH:$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION
         else
           echo "⚠️ aidl tool not found, checking alternative locations..."
           for build_tools_dir in $ANDROID_HOME/build-tools/*/; do
@@ -300,23 +311,39 @@ jobs:
     - name: Build Android APK
       id: build
       run: |
-        echo "=== Building Android APK with direct environment setup ==="
+        echo "=== Building Android APK with dynamic environment setup ==="
         
-        # Set up environment variables directly (not from action outputs)
+        # Set up environment variables dynamically
         export ANDROID_HOME="/usr/local/lib/android/sdk"
         export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
-        export ANDROID_NDK_HOME="/usr/local/lib/android/ndk/25.1.8937393"
-        export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_NDK_HOME:$PATH"
+        
+        # Use the dynamically detected build-tools version
+        if [ -f "$GITHUB_ENV/BUILD_TOOLS_VERSION" ]; then
+          export BUILD_TOOLS_VERSION=$(cat $GITHUB_ENV/BUILD_TOOLS_VERSION)
+        else
+          export BUILD_TOOLS_VERSION=$(ls -1d $ANDROID_HOME/build-tools/*/ 2>/dev/null | head -1 | xargs basename)
+        fi
+        
+        # Set NDK home if available
+        NDK_DIR=$(ls -1d $ANDROID_HOME/ndk-* 2>/dev/null | head -1)
+        if [ -n "$NDK_DIR" ]; then
+          export ANDROID_NDK_HOME="$NDK_DIR"
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION:$ANDROID_NDK_HOME:$PATH"
+        else
+          export ANDROID_NDK_HOME=""
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION:$PATH"
+        fi
         
         echo "=== Environment variables set ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "BUILD_TOOLS_VERSION: $BUILD_TOOLS_VERSION"
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "PATH: $PATH"
         
         # Verify aidl tool exists in the setup SDK
         echo "=== Verifying aidl tool ==="
-        AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
+        AIDL_PATH="$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/aidl"
         if [ -f "$AIDL_PATH" ]; then
           echo "✅ aidl tool found at: $AIDL_PATH"
           echo "Testing aidl tool..."
@@ -335,117 +362,33 @@ jobs:
           done
         fi
         
-        # Set diagnostic information for buildozer - FORCE buildozer to use pre-installed SDK
-        echo "=== Setting buildozer diagnostic information ==="
-        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "ANDROID_BUILD_TOOLS_PATH=$ANDROID_HOME/build-tools/28.0.3" >> $GITHUB_ENV
-        echo "BUILD_TOOLS_VERSION=28.0.3" >> $GITHUB_ENV
-        echo "BUILDOZER_ANDROID_SDK=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "BUILDOZER_ANDROID_NDK=$ANDROID_NDK_HOME" >> $GITHUB_ENV
-        echo "BUILDOZER_FORCE_PREINSTALLED_SDK=1" >> $GITHUB_ENV
-        echo "BUILDOZER_DISABLE_SDK_DOWNLOAD=1" >> $GITHUB_ENV
-        echo "BUILDOZER_SKIP_SDK_UPDATE=1" >> $GITHUB_ENV
-        echo "ANDROID_UPDATE_SDK=0" >> $GITHUB_ENV
-        echo "BUILDOZER_IGNORE_SDK_VERSION=1" >> $GITHUB_ENV
-        echo "BUILDOZER_FORCE_SYSTEM_SDK=1" >> $GITHUB_ENV
-        echo "BUILDOZER_DISABLE_SDK_DOWNLOAD_ALL=1" >> $GITHUB_ENV
-        echo "BUILDOZER_NO_SDK_UPDATE=1" >> $GITHUB_ENV
-        echo "BUILDOZER_SYSTEM_SDK_ONLY=1" >> $GITHUB_ENV
-        
         # COMPREHENSIVE license acceptance for ALL packages
-        echo "=== Comprehensive license acceptance for ALL Android SDK packages ==="
-        # Accept licenses multiple ways to ensure they are accepted
-        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
-        echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
+        echo "=== Final license acceptance for all Android SDK packages ==="
+        # Accept licenses
+        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses 2>/dev/null || true
         
-        # Create license files directly to force acceptance
-        mkdir -p $ANDROID_HOME/licenses
-        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
-        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/android-sdk-license
-        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-arm64-v8a-license
-        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > $ANDROID_HOME/licenses/android-sdk-arm64-v8a-license
-        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-preview-license
-        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/google-license
-        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/google-license
+        # Create minimal license files
+        mkdir -p $ANDROID_HOME/licenses 2>/dev/null || true
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license 2>/dev/null || true
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/android-sdk-license 2>/dev/null || true
         
-        echo "✅ License files created:"
-        ls -la $ANDROID_HOME/licenses/
-        
-        # Create SYMLINKS to force buildozer to use pre-installed SDK
-        echo "=== Creating symlinks to force buildozer to use pre-installed SDK ==="
-        mkdir -p $HOME/.buildozer/android/platform
-        # Create symlinks to force buildozer to use system SDK
-        ln -sf $ANDROID_HOME $HOME/.buildozer/android/platform/android-sdk
-        ln -sf $ANDROID_NDK_HOME $HOME/.buildozer/android/platform/android-ndk
-        echo "✅ Symlinks created:"
-        echo "android-sdk -> $ANDROID_HOME"
-        echo "android-ndk -> $ANDROID_NDK_HOME"
-        ls -la $HOME/.buildozer/android/platform/
-        
-        # Run buildozer with forced environment and command line arguments to bypass all config
-        echo "=== Running buildozer android debug with FORCE command line arguments ==="
-        echo "Current environment:"
-        echo "ANDROID_HOME: $ANDROID_HOME"
-        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
-        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
-        echo "AIDL_PATH: $AIDL_PATH"
-        echo "PATH: $PATH"
-        
-        # Final verification that aidl is accessible
-        echo "=== Final aidl verification ==="
-        if [ -f "$AIDL_PATH" ]; then
-          echo "✅ Final check: aidl found at $AIDL_PATH"
-          # Test aidl directly
-          timeout 5s $AIDL_PATH 2>&1 | head -3 || echo "aidl test completed"
-        else
-          echo "❌ Final check: aidl not found at $AIDL_PATH"
-          echo "Available build tools:"
-          find $ANDROID_HOME/build-tools -name "aidl" -type f 2>/dev/null || echo "No aidl found in any build-tools version"
+        # Create symlink to force buildozer to use system SDK
+        echo "=== Creating symlink for buildozer SDK access ==="
+        mkdir -p $HOME/.buildozer/android/platform 2>/dev/null || true
+        ln -sf $ANDROID_HOME $HOME/.buildozer/android/platform/android-sdk 2>/dev/null || true
+        if [ -n "$ANDROID_NDK_HOME" ]; then
+          ln -sf $ANDROID_NDK_HOME $HOME/.buildozer/android/platform/android-ndk 2>/dev/null || true
         fi
         
-        # COMPLETELY DESTROY and RECREATE buildozer to force use of system SDK
-        echo "=== DESTRUCTIVE RESET: Complete buildozer destruction and recreation ==="
-        # Complete destruction of everything
-        rm -rf $HOME/.buildozer 2>/dev/null || true
-        rm -rf ~/.buildozer_global 2>/dev/null || true
-        rm -rf ~/.cache/buildozer 2>/dev/null || true
-        rm -rf .buildozer 2>/dev/null || true
-        rm -rf bin/ 2>/dev/null || true
-        
-        # Install python-for-android FIRST - before any buildozer commands
-        echo "=== Installing python-for-android (p4a) FIRST with pip ==="
+        # Run buildozer with minimal configuration
+        echo "=== Running buildozer android debug ==="
         ANDROID_SDK_ROOT=$ANDROID_HOME \
         ANDROID_HOME=$ANDROID_HOME \
-        ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
-        PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
-        pip install --upgrade pip
-        pip install python-for-android
-        
-        # Verify p4a installation
-        echo "=== Verifying python-for-android installation ==="
-        which p4a || echo "p4a command not found"
-        python -c "import buildozer; print('buildozer installed')" || echo "buildozer not working"
-        
-        # Initialize p4a manually 
-        echo "=== Initializing python-for-android ==="
-        ANDROID_SDK_ROOT=$ANDROID_HOME \
-        ANDROID_HOME=$ANDROID_HOME \
-        ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
-        PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
-        p4a apk --help 2>&1 | head -5 || echo "p4a verification"
-        
-        # Use buildozer android debug with FIXED p4a
-        echo "=== FINAL BUILD: Using buildozer with manually installed p4a ==="
-        ANDROID_SDK_ROOT=$ANDROID_HOME \
-        ANDROID_HOME=$ANDROID_HOME \
-        ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
-        PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
         ANDROID_SDK=$ANDROID_HOME \
-        BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/28.0.3 \
+        BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION \
         BUILDOZER_FORCE_SYSTEM_SDK=1 \
         SKIP_JDK_VERSION_CHECK=1 \
-        buildozer android debug --verbose
+        buildozer android debug
     
     - name: Check if APK was created
       run: |
