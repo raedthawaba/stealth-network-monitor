@@ -190,15 +190,21 @@ jobs:
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         
-        # Accept licenses for all possible Android components
+        # Accept licenses for all possible Android components including the problematic build-tools 36.1.0
         yes | sdkmanager --licenses 2>/dev/null || true
         
-        # Also accept for the buildozer SDK if it exists
-        if [ -d "$HOME/.buildozer/android/platform/android-sdk" ]; then
-          echo "Found buildozer SDK, accepting licenses there too"
-          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
-          yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --licenses 2>/dev/null || true
-        fi
+        # Also accept licenses for build-tools 36.1.0 specifically if it exists in any SDK
+        for sdk_dir in "$HOME/.buildozer" "$ANDROID_HOME" "$HOME/.android"; do
+          if [ -d "$sdk_dir/cmdline-tools/bin" ]; then
+            echo "Accepting licenses in: $sdk_dir"
+            export ANDROID_SDK_ROOT="$sdk_dir"
+            yes | $sdk_dir/cmdline-tools/bin/sdkmanager --licenses 2>/dev/null || true
+          fi
+        done
+        
+        # Create global license acceptance file
+        mkdir -p ~/.android
+        echo "24389f8a3084100b7aa0cf2d05ab425e" > ~/.android/debug.keystore.lock 2>/dev/null || true
         echo "=== License acceptance complete ==="
     
     - name: Set up Android environment and verify aidl
@@ -270,22 +276,84 @@ jobs:
         echo "=== Installed SDK packages ==="
         sdkmanager --list_installed 2>/dev/null || echo "sdkmanager check failed but continuing"
     
-    - name: Clean previous build artifacts
+    - name: Clean build artifacts and configure buildozer SDK
       run: |
-        echo "=== Cleaning previous artifacts ==="
+        echo "=== Cleaning all build artifacts and configuring buildozer ==="
+        # Clean all buildozer directories and caches
         rm -rf .buildozer .buildozer_global
         rm -rf bin/
-        echo "=== Clean complete ==="
+        rm -rf ~/.buildozer
+        rm -rf ~/.cache/buildozer
+        
+        # Create buildozer global configuration to use existing SDK
+        mkdir -p ~/.buildozer_global
+        
+        # Configure buildozer to use the pre-installed Android SDK
+        cat > ~/.buildozer_global/android.env << 'EOF'
+# Force buildozer to use existing Android SDK
+export ANDROID_HOME="$ANDROID_HOME"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export ANDROID_NDK_HOME="$ANDROID_NDK_HOME"
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$PATH"
+EOF
+        
+        # Source the configuration
+        source ~/.buildozer_global/android.env
+        
+        # Verify environment setup
+        echo "=== Android environment configuration ==="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+        echo "PATH includes: $PATH"
+        
+        # Accept licenses one more time to be absolutely sure
+        echo "=== Final license acceptance ==="
+        yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+        yes | sdkmanager --licenses || true
+        
+        echo "=== Build artifacts cleaned and buildozer configured ==="
     
-    - name: Build Android APK
+    - name: Build Android APK with forced SDK configuration
       id: build
       run: |
-        echo "=== Starting buildozer build ==="
+        # Source the buildozer environment configuration
+        source ~/.buildozer_global/android.env
+        
+        echo "=== Starting buildozer build with forced SDK configuration ==="
         echo "Current directory: $(pwd)"
         echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "PATH: $PATH"
-        echo "=== Starting buildozer android debug ==="
-        buildozer android debug
+        
+        # Double-check that aidl tool is available
+        echo "=== Final aidl verification ==="
+        AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
+        if [ -f "$AIDL_PATH" ]; then
+          echo "✅ aidl tool confirmed at: $AIDL_PATH"
+          export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
+        else
+          echo "❌ aidl tool missing! This should not happen."
+          echo "Available build-tools:"
+          ls -la $ANDROID_HOME/build-tools/ || echo "No build-tools directory"
+          exit 1
+        fi
+        
+        # Force buildozer to use existing SDK by setting environment variables
+        export ANDROID_HOME="$ANDROID_HOME"
+        export ANDROID_SDK_ROOT="$ANDROID_HOME"
+        export ANDROID_NDK_HOME="$ANDROID_NDK_HOME"
+        export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$PATH"
+        
+        echo "=== Running buildozer with forced SDK configuration ==="
+        echo "Environment variables set for buildozer:"
+        echo "ANDROID_HOME=$ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+        echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+        
+        # Run buildozer with verbose logging to see exactly what it's doing
+        buildozer --log-level=2 android debug
     
     - name: Check if APK was created
       run: |
