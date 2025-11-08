@@ -39,7 +39,7 @@ fullscreen = 1
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,READ_PHONE_STATE,GET_TASKS
 
 # (int) Target Android API, should be as high as possible.
-android.api = 34
+android.api = 35
 
 # (str) Java version for build process
 android.java_version = 8

@@ -164,26 +164,35 @@ jobs:
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         
-        # Create a simple yes file to accept all licenses automatically
-        printf "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n" | sdkmanager --licenses || true
+        # Try multiple approaches to accept licenses
+        printf "y\n" | yes | sdkmanager --licenses || true
+        sdkmanager --licenses << EOF
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+EOF
         echo "=== All licenses accepted ==="
     
-    - name: Setup Android SDK with proper packages
+    - name: Setup Android SDK with minimal packages
       uses: android-actions/setup-android@v3
       with:
-        packages: |
-          platform-tools
-          build-tools;34.0.0
-          platforms;android-34
-        accept-android-sdk-licenses: true
+        android-version: 35
+        build-tools-version: 35.0.0
       env:
         SKIP_JDK_VERSION_CHECK: true
     
     - name: Verify build-tools installation
       run: |
         echo "=== Verifying build-tools installation ==="
-        # Verify that build-tools;34.0.0 is installed
-        BUILD_TOOLS_VERSION="34.0.0"
+        # Verify that build-tools;35.0.0 is installed
+        BUILD_TOOLS_VERSION="35.0.0"
         echo "build_tools_version=$BUILD_TOOLS_VERSION" >> $GITHUB_OUTPUT
         echo "Using build-tools version: $BUILD_TOOLS_VERSION"
         echo "$BUILD_TOOLS_VERSION" > $GITHUB_ENV/BUILD_TOOLS_VERSION
@@ -196,9 +205,9 @@ jobs:
         export ANDROID_HOME="/usr/local/lib/android/sdk"
         export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
         
-        # Set build-tools version to the one we installed (34.0.0)
-        export BUILD_TOOLS_VERSION="34.0.0"
-        export BUILD_TOOLS_DIR="34.0.0"
+        # Set build-tools version to the one we installed (35.0.0)
+        export BUILD_TOOLS_VERSION="35.0.0"
+        export BUILD_TOOLS_DIR="35.0.0"
         
         # Set NDK home if available
         NDK_DIR=$(ls -1d $ANDROID_HOME/ndk-* 2>/dev/null | head -1)
@@ -213,7 +222,7 @@ jobs:
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
         echo "BUILD_TOOLS_VERSION=34.0.0" >> $GITHUB_ENV
-        echo "BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_ENV
+        echo "BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/35.0.0" >> $GITHUB_ENV
         if [ -n "$ANDROID_NDK_HOME" ]; then
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
           echo "$ANDROID_NDK_HOME" >> $GITHUB_PATH
@@ -224,7 +233,7 @@ jobs:
         echo "$ANDROID_HOME/tools" >> $GITHUB_PATH
         echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
         echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/build-tools/35.0.0" >> $GITHUB_PATH
         
         echo "=== Android environment set up ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
@@ -234,7 +243,7 @@ jobs:
         
         # Verify aidl tool
         echo "=== Verifying aidl tool ==="
-        AIDL_PATH="$ANDROID_HOME/build-tools/34.0.0/aidl"
+        AIDL_PATH="$ANDROID_HOME/build-tools/35.0.0/aidl"
         if [ -f "$AIDL_PATH" ]; then
           echo "✅ Found aidl tool at: $AIDL_PATH"
           # Test if aidl works
@@ -262,11 +271,11 @@ jobs:
         echo "BUILD_TOOLS_VERSION: $BUILD_TOOLS_VERSION"
         echo "PATH includes: $PATH"
         
-        # Verify aidl tool with fixed path (34.0.0)
-        AIDL_PATH="$ANDROID_HOME/build-tools/34.0.0/aidl"
+        # Verify aidl tool with fixed path (35.0.0)
+        AIDL_PATH="$ANDROID_HOME/build-tools/35.0.0/aidl"
         if [ -f "$AIDL_PATH" ]; then
           echo "✅ aidl tool found at: $AIDL_PATH"
-          export PATH=$PATH:$ANDROID_HOME/build-tools/34.0.0
+          export PATH=$PATH:$ANDROID_HOME/build-tools/35.0.0
         else
           echo "⚠️ aidl tool not found, checking alternative locations..."
           for build_tools_dir in $ANDROID_HOME/build-tools/*/; do
@@ -302,31 +311,31 @@ jobs:
       run: |
         echo "=== Building Android APK with dynamic environment setup ==="
         
-        # Set up environment variables for build-tools version 34.0.0
+        # Set up environment variables for build-tools version 35.0.0
         export ANDROID_HOME="/usr/local/lib/android/sdk"
         export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
-        export BUILD_TOOLS_VERSION="34.0.0"
+        export BUILD_TOOLS_VERSION="35.0.0"
         
         # Set NDK home if available
         NDK_DIR=$(ls -1d $ANDROID_HOME/ndk-* 2>/dev/null | head -1)
         if [ -n "$NDK_DIR" ]; then
           export ANDROID_NDK_HOME="$NDK_DIR"
-          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$ANDROID_NDK_HOME:$PATH"
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/35.0.0:$ANDROID_NDK_HOME:$PATH"
         else
           export ANDROID_NDK_HOME=""
-          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$PATH"
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/35.0.0:$PATH"
         fi
         
         echo "=== Environment variables set ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
-        echo "BUILD_TOOLS_VERSION: 34.0.0"
+        echo "BUILD_TOOLS_VERSION: 35.0.0"
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "PATH: $PATH"
         
         # Verify aidl tool exists in the setup SDK
         echo "=== Verifying aidl tool ==="
-        AIDL_PATH="$ANDROID_HOME/build-tools/34.0.0/aidl"
+        AIDL_PATH="$ANDROID_HOME/build-tools/35.0.0/aidl"
         if [ -f "$AIDL_PATH" ]; then
           echo "✅ aidl tool found at: $AIDL_PATH"
           echo "Testing aidl tool..."
@@ -368,7 +377,7 @@ jobs:
         ANDROID_SDK_ROOT=$ANDROID_HOME \
         ANDROID_HOME=$ANDROID_HOME \
         ANDROID_SDK=$ANDROID_HOME \
-        BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/34.0.0 \
+        BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/35.0.0 \
         BUILDOZER_FORCE_SYSTEM_SDK=1 \
         SKIP_JDK_VERSION_CHECK=1 \
         buildozer android debug
