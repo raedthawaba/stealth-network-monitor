@@ -190,8 +190,20 @@ jobs:
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         
-        # Accept licenses for all possible Android components including the problematic build-tools 36.1.0
-        yes | sdkmanager --licenses 2>/dev/null || true
+        # Create a comprehensive license acceptance script
+        cat > /tmp/accept_licenses.sh << 'EOF'
+        #!/bin/bash
+        # Accept all licenses that sdkmanager might require
+        while true; do
+            echo "y"
+            sleep 0.1
+        done | sdkmanager --licenses
+        EOF
+        
+        # Make the script executable and run it multiple times to ensure all licenses are accepted
+        chmod +x /tmp/accept_licenses.sh
+        /tmp/accept_licenses.sh
+        /tmp/accept_licenses.sh
         
         # Also accept licenses for build-tools 36.1.0 specifically if it exists in any SDK
         for sdk_dir in "$HOME/.buildozer" "$ANDROID_HOME" "$HOME/.android"; do
@@ -202,9 +214,15 @@ jobs:
           fi
         done
         
-        # Create global license acceptance file
+        # Create global license acceptance file to prevent future prompts
         mkdir -p ~/.android
         echo "24389f8a3084100b7aa0cf2d05ab425e" > ~/.android/debug.keystore.lock 2>/dev/null || true
+        
+        # Also create license file in buildozer's location
+        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+        echo "24389f8a3084100b7aa0cf2d05ab425e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license 2>/dev/null || true
+        echo "24389f8a3084100b7aa0cf2d05ab425e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license 2>/dev/null || true
+        
         echo "=== License acceptance complete ==="
     
     - name: Set up Android environment and verify aidl
@@ -298,7 +316,9 @@ jobs:
         
         # Set up environment variables directly from setup-android action
         export ANDROID_HOME="${{ steps.setup-android.outputs.sdk-path }}"
-        export PATH="${{ steps.setup-android.outputs.sdk-path }}/platform-tools:${{ steps.setup-android.outputs.sdk-path }}/tools:${{ steps.setup-android.outputs.sdk-path }}/tools/bin:${{ steps.setup-android.outputs.sdk-path }}/build-tools/28.0.3:$PATH"
+        export ANDROID_SDK_ROOT="$ANDROID_HOME"
+        export ANDROID_NDK_HOME="${{ steps.setup-android.outputs.ndk-path }}"
+        export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$PATH"
         
         echo "=== Environment variables set ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
@@ -322,14 +342,38 @@ jobs:
           done
         fi
         
-        # Accept licenses to prevent any buildozer issues
-        echo "=== Accepting all Android licenses ==="
-        yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses 2>/dev/null || true
-        yes | sdkmanager --licenses 2>/dev/null || true
+        # Comprehensive license acceptance before running buildozer
+        echo "=== Comprehensive license acceptance ==="
+        # Create a comprehensive license acceptance script
+        printf "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n" | sdkmanager --sdk_root=$ANDROID_HOME --licenses 2>/dev/null || true
+        printf "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n" | sdkmanager --licenses 2>/dev/null || true
         
-        # Simple buildozer command - environment variables are set globally
-        echo "=== Running buildozer android debug ==="
-        buildozer android debug
+        # Accept licenses for potential buildozer SDK locations
+        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+        echo "24389f8a3084100b7aa0cf2d05ab425e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license 2>/dev/null || true
+        echo "24389f8a3084100b7aa0cf2d05ab425e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license 2>/dev/null || true
+        
+        # Force buildozer to use the pre-installed SDK by creating config
+        echo "=== Creating buildozer global config to use pre-installed SDK ==="
+        mkdir -p ~/.buildozer_global
+        cat > ~/.buildozer_global/global_config.ini << EOF
+[app]
+# Android configuration
+android.api = 28
+android.minapi = 21
+android.ndk_api = 21
+android.sdk_path = $ANDROID_HOME
+android.ndk_path = $ANDROID_NDK_HOME
+android.release_keystore = ~/.android/debug.keystore
+android.debug_keystore = ~/.android/debug.keystore
+android.keystore_alias = androiddebugkey
+android.keystore_password = android
+android.keystore_alias_password = android
+EOF
+        
+        # Simple buildozer command with environment variables
+        echo "=== Running buildozer android debug with forced SDK usage ==="
+        ANDROID_HOME="$ANDROID_HOME" ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" buildozer android debug
     
     - name: Check if APK was created
       run: |
