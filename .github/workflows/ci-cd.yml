@@ -189,8 +189,7 @@ jobs:
       run: |
         echo "=== Accepting Android licenses ==="
         yes | sdkmanager --licenses
-        yes | sdkmanager "platform-tools" "build-tools;30.0.3" "android-30"
-        echo "=== Installed packages ==="
+        echo "=== Android setup complete ==="
         sdkmanager --list_installed
     
     - name: Clean previous build artifacts
