@@ -17,6 +17,8 @@ kivymd>=1.1.1
 # threading (built-in to Python)
 
 # Development & Build Tools
+pytest>=6.0.0
+pytest-cov>=2.0.0
 # buildozer (installed separately via pip)
 
 # Optional Enhancement Libraries (for desktop testing)
