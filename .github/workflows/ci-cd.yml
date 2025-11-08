@@ -82,10 +82,19 @@ jobs:
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        api-level: 30
+        build-tools-version: "30.0.3"
+        target: default
     
-    - name: Accept Android licenses
+    - name: Accept Android licenses explicitly
       run: |
-        yes | sdkmanager --licenses
+        yes | sdkmanager --sdk_root=/home/runner/.android/sdk --licenses
+        yes | sdkmanager --sdk_root=/home/runner/.android/sdk --accept_licenses --licenses
+        sdkmanager --list
+        sdkmanager --sdk_root=/home/runner/.android/sdk "build-tools;30.0.3"
+        sdkmanager --sdk_root=/home/runner/.android/sdk "platforms;android-30"
+        sdkmanager --sdk_root=/home/runner/.android/sdk "tools"
     
     - name: Install buildozer
       run: |
