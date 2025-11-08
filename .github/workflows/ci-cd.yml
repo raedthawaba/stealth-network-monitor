@@ -189,7 +189,7 @@ jobs:
       run: |
         echo "=== Accepting Android licenses ==="
         yes | sdkmanager --licenses
-        yes | sdkmanager "platform-tools" "build-tools;31.0.0" "android-31"
+        yes | sdkmanager "platform-tools" "build-tools;30.0.3" "android-30"
         echo "=== Installed packages ==="
         sdkmanager --list_installed
     
