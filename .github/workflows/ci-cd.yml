@@ -87,14 +87,27 @@ jobs:
         build-tools-version: "30.0.3"
         target: default
     
-    - name: Accept Android licenses explicitly
+    - name: Accept Android licenses and install required components
       run: |
-        yes | sdkmanager --sdk_root=/home/runner/.android/sdk --licenses
-        yes | sdkmanager --sdk_root=/home/runner/.android/sdk --accept_licenses --licenses
-        sdkmanager --list
-        sdkmanager --sdk_root=/home/runner/.android/sdk "build-tools;30.0.3"
-        sdkmanager --sdk_root=/home/runner/.android/sdk "platforms;android-30"
-        sdkmanager --sdk_root=/home/runner/.android/sdk "tools"
+        export ANDROID_HOME=/home/runner/.android/sdk
+        export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        
+        # Accept all Android SDK licenses
+        yes | sdkmanager --licenses || true
+        yes | sdkmanager --sdk_root=/home/runner/.android/sdk --licenses || true
+        
+        # Install required Android components
+        sdkmanager --install "build-tools;30.0.3" "platforms;android-30" "tools" "platform-tools"
+        
+        # Verify installation
+        ls -la /home/runner/.android/sdk/build-tools/
+        ls -la /home/runner/.android/sdk/platforms/
+        find /home/runner/.android/sdk/build-tools/ -name "aidl" 2>/dev/null || echo "aidl not found"
+        
+        # Set environment variables for buildozer
+        echo "ANDROID_HOME=/home/runner/.android/sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:/home/runner/.android/sdk/platform-tools:/home/runner/.android/sdk/build-tools/30.0.3" >> $GITHUB_ENV
     
     - name: Install buildozer
       run: |
@@ -102,6 +115,16 @@ jobs:
     
     - name: Build Android APK
       run: |
+        export ANDROID_HOME=/home/runner/.android/sdk
+        export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+        echo "Building APK with Android SDK..."
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "PATH: $PATH"
+        
+        # Verify aidl tool is available
+        find $ANDROID_HOME/build-tools/ -name "aidl" -type f 2>/dev/null || echo "Warning: aidl not found"
+        
+        # Build APK
         buildozer android debug
     
     - name: Upload APK artifact
