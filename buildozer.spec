@@ -44,10 +44,14 @@ android.api = 28
 # (str) Android build tools version to use, must match existing installation
 android.build_tools_version = 28.0.3
 
+# (str) Android SDK path - set to prevent download
+android.sdk_path = 
 
+# (str) Android NDK path - set to prevent download
+android.ndk_path = 
 
 # (bool) — Don't ask to download the闲置依赖项s even if needed
-android.download_ignore_cache_version = False
+android.download_ignore_cache_version = True
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
@@ -99,7 +103,7 @@ build_dir = ./.buildozer
 bin_dir = ./bin
 
 # (bool) — Don't ask to download the闲置依赖项s even if needed
-android.download_ignore_cache_version = False
+android.download_ignore_cache_version = True
 
 # (bool) — Ignore redundant instock resources
 android.copy_libs = 1

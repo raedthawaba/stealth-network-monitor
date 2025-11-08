@@ -338,6 +338,9 @@ jobs:
         echo "BUILDOZER_FORCE_PREINSTALLED_SDK=1" >> $GITHUB_ENV
         echo "BUILDOZER_DISABLE_SDK_DOWNLOAD=1" >> $GITHUB_ENV
         echo "BUILDOZER_SKIP_SDK_UPDATE=1" >> $GITHUB_ENV
+        echo "ANDROID_UPDATE_SDK=0" >> $GITHUB_ENV
+        echo "BUILDOZER_IGNORE_SDK_VERSION=1" >> $GITHUB_ENV
+        echo "BUILDOZER_FORCE_SYSTEM_SDK=1" >> $GITHUB_ENV
         
         # Verify license acceptance one more time
         echo "=== Final license acceptance ==="
@@ -369,27 +372,35 @@ jobs:
           find $ANDROID_HOME/build-tools -name "aidl" -type f 2>/dev/null || echo "No aidl found in any build-tools version"
         fi
         
-        # DESTROY any existing buildozer cache and SDK to force use of system SDK
-        echo "=== DESTROYING all buildozer cache and SDK installations ==="
+        # COMPLETELY DESTROY and RECREATE buildozer to force use of system SDK
+        echo "=== DESTRUCTIVE RESET: Complete buildozer destruction and recreation ==="
+        # Complete destruction of everything
         rm -rf $HOME/.buildozer 2>/dev/null || true
         rm -rf ~/.buildozer_global 2>/dev/null || true
         rm -rf ~/.cache/buildozer 2>/dev/null || true
         rm -rf .buildozer 2>/dev/null || true
+        rm -rf bin/ 2>/dev/null || true
         
-        # Use system Android SDK explicitly via environment and command line
-        echo "=== EXECUTING BUILDOZER with system SDK (BYPASS ALL CONFIGS) ==="
-        # Force buildozer to use system Android SDK completely
+        # Force buildozer to NOT download any SDK - use system SDK only
+        echo "=== Using buildozer android clean to prevent SDK downloads ==="
         ANDROID_SDK_ROOT=$ANDROID_HOME \
         ANDROID_HOME=$ANDROID_HOME \
         ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
         PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
-        buildozer --android.api=28 \
-                 --android.build_tools_version=28.0.3 \
-                 --android.sdk_path="$ANDROID_HOME" \
-                 --android.ndk_path="$ANDROID_NDK_HOME" \
-                 --android.minapi=21 \
-                 --android.ndk_api=21 \
-                 android debug --verbose
+        buildozer android clean
+        
+        # Use buildozer android debug with DIRECT SYSTEM SDK integration
+        echo "=== FINAL BUILD: Using buildozer with direct system SDK integration ==="
+        # Try different approaches to force system SDK usage
+        echo "Attempt 1: buildozer android debug with environment variables"
+        ANDROID_SDK_ROOT=$ANDROID_HOME \
+        ANDROID_HOME=$ANDROID_HOME \
+        ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
+        PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
+        ANDROID_SDK=$ANDROID_HOME \
+        BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/28.0.3 \
+        BUILDOZER_FORCE_SYSTEM_SDK=1 \
+        buildozer android debug --verbose
     
     - name: Check if APK was created
       run: |
