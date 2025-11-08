@@ -158,68 +158,51 @@ jobs:
           libgl1-mesa-dev libgles2-mesa-dev \
           curl wget
     
-    - name: Setup Android SDK manually (version 28 stable)
+    - name: Setup Android SDK with proper aidl support
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 28
+        build-tools-version: 28.0.3
+        ndk-version: "25.1.8937393"
+    
+    - name: Set up Android environment and verify aidl
       run: |
-        # Remove any existing Android SDK to start fresh
-        rm -rf /home/runner/android-sdk /home/runner/.android
-        
-        # Download and setup Android SDK command line tools
-        cd /home/runner
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-        unzip -q commandlinetools-linux-8512546_latest.zip
-        
-        # Setup proper directory structure
-        mkdir -p android-sdk/cmdline-tools
-        mv cmdline-tools android-sdk/cmdline-tools/latest
-        
         # Set up environment variables
-        export ANDROID_HOME=/home/runner/android-sdk
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+        echo "ANDROID_HOME=${{ steps.setup-android.outputs.sdk-path }}" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=${{ steps.setup-android.outputs.ndk-path }}" >> $GITHUB_ENV
+        echo "${{ steps.setup-android.outputs.sdk-path }}/platform-tools" >> $GITHUB_PATH
+        echo "${{ steps.setup-android.outputs.sdk-path }}/tools" >> $GITHUB_PATH
+        echo "${{ steps.setup-android.outputs.sdk-path }}/tools/bin" >> $GITHUB_PATH
+        echo "${{ steps.setup-android.outputs.sdk-path }}/build-tools/28.0.3" >> $GITHUB_PATH
         
-        # Accept all licenses and install required components
-        echo "=== Accepting Android licenses ==="
-        yes | sdkmanager --licenses || true
-        
-        echo "=== Installing Android SDK components ==="
-        sdkmanager "build-tools;28.0.3" "platforms;android-28" "tools" "platform-tools"
-        
-        # Verify installation
-        echo "=== Verifying Android SDK installation ==="
-        sdkmanager --list_installed
-        
-        # Set environment variables for subsequent steps
-        echo "ANDROID_HOME=/home/runner/android-sdk" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=" >> $GITHUB_ENV
-        echo "/home/runner/android-sdk/platform-tools" >> $GITHUB_PATH
-        echo "/home/runner/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "/home/runner/android-sdk/build-tools/28.0.3" >> $GITHUB_PATH
-        
-        echo "=== Android SDK setup complete ==="
+        echo "=== Android environment set up ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "PATH: $PATH"
         
-        # Verify aidl tool is available
-        echo "=== Checking aidl tool location ==="
-        echo "ANDROID_HOME: $ANDROID_HOME"
-        echo "Build tools directory:"
-        ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "Build tools directory not found"
-        echo "Build tools 28.0.3 directory:"
-        ls -la $ANDROID_HOME/build-tools/28.0.3/ 2>/dev/null || echo "Build tools 28.0.3 not found"
-        echo "aidl tool in build-tools:"
-        ls -la $ANDROID_HOME/build-tools/28.0.3/aidl 2>/dev/null || echo "aidl tool not found in build-tools"
+        # Force accept all licenses
+        echo "=== Accepting Android licenses ==="
+        yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
         
-        # Test aidl tool directly from build-tools
-        if [ -f "$ANDROID_HOME/build-tools/28.0.3/aidl" ]; then
-          echo "✅ Found aidl tool in build-tools directory"
-          $ANDROID_HOME/build-tools/28.0.3/aidl --version
+        # Install required components
+        echo "=== Installing additional components ==="
+        sdkmanager "platform-tools" "build-tools;28.0.3"
+        
+        # Verify aidl tool
+        echo "=== Verifying aidl tool ==="
+        AIDL_PATH="$ANDROID_HOME/build-tools/28.0.3/aidl"
+        if [ -f "$AIDL_PATH" ]; then
+          echo "✅ Found aidl tool at: $AIDL_PATH"
+          $AIDL_PATH --version
+          # Test aidl in PATH
+          export PATH=$PATH:$ANDROID_HOME/build-tools/28.0.3
+          which aidl || echo "aidl not in PATH but file exists"
         else
-          echo "❌ aidl tool not found in build-tools - install may have failed"
+          echo "❌ aidl tool not found at: $AIDL_PATH"
+          echo "Available build tools:"
+          ls -la $ANDROID_HOME/build-tools/
           exit 1
         fi
-        
-        # Test using sdkmanager to verify installation
-        echo "=== Using sdkmanager to verify build-tools installation ==="
-        sdkmanager --list_installed | grep "build-tools" || echo "Build-tools not found in installed packages"
     
     - name: Install Python dependencies
       run: |
