@@ -76,13 +76,13 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: 'gradle'
+        cache: 'none'  # Disable Java cache to avoid Gradle file errors
     
     - name: Cache Buildozer global directory
       uses: actions/cache@v3
       with:
         path: .buildozer_global
-        key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+        key: buildozer-global-${{ hashFiles('**/buildozer.spec') }}
         restore-keys: |
           buildozer-global-
     
@@ -90,10 +90,19 @@ jobs:
       uses: actions/cache@v3
       with:
         path: .buildozer
-        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
+        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('**/buildozer.spec') }}
         restore-keys: |
           ${{ runner.os }}-
 
+    - name: Debug project structure
+      run: |
+        echo "=== Current directory structure ==="
+        ls -la
+        echo "=== Looking for buildozer.spec ==="
+        find . -name "buildozer.spec" -type f
+        echo "=== Files in current directory ==="
+        pwd && ls -la
+        
     - name: Get current date
       id: get-date
       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
