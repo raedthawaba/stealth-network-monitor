@@ -389,18 +389,30 @@ jobs:
         PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
         buildozer android clean
         
-        # Install python-for-android (p4a) BEFORE building
-        echo "=== Installing python-for-android (p4a) ==="
+        # Install python-for-android manually using pip
+        echo "=== Installing python-for-android (p4a) manually with pip ==="
         ANDROID_SDK_ROOT=$ANDROID_HOME \
         ANDROID_HOME=$ANDROID_HOME \
         ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
         PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
-        buildozer android requirements
+        pip install --upgrade pip
+        pip install python-for-android
         
-        # Use buildozer android debug with DIRECT SYSTEM SDK integration
-        echo "=== FINAL BUILD: Using buildozer with direct system SDK integration ==="
-        # Try different approaches to force system SDK usage
-        echo "Attempt 1: buildozer android debug with environment variables"
+        # Verify p4a installation
+        echo "=== Verifying python-for-android installation ==="
+        which p4a || echo "p4a command not found"
+        python -c "import buildozer; print('buildozer installed')" || echo "buildozer not working"
+        
+        # Initialize p4a manually 
+        echo "=== Initializing python-for-android ==="
+        ANDROID_SDK_ROOT=$ANDROID_HOME \
+        ANDROID_HOME=$ANDROID_HOME \
+        ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
+        PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/build-tools/28.0.3:$ANDROID_HOME/ndk/25.1.8937393:$PATH" \
+        p4a apk --help 2>&1 | head -5 || echo "p4a verification"
+        
+        # Use buildozer android debug with FIXED p4a
+        echo "=== FINAL BUILD: Using buildozer with manually installed p4a ==="
         ANDROID_SDK_ROOT=$ANDROID_HOME \
         ANDROID_HOME=$ANDROID_HOME \
         ANDROID_NDK_HOME=$ANDROID_NDK_HOME \
