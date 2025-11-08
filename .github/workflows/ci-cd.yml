@@ -100,10 +100,10 @@ jobs:
       with:
         python-version: "3.8"
     
-    - name: Install Java 8 (required for Android SDK compatibility)
+    - name: Install Java 17 (required for Android SDK and buildozer compatibility)
       uses: actions/setup-java@v3
       with:
-        java-version: '8'
+        java-version: '17'
         distribution: 'temurin'
     
     - name: Check project structure
@@ -161,9 +161,11 @@ jobs:
     - name: Setup Android SDK with proper aidl support
       uses: android-actions/setup-android@v3
       with:
-        api-level: 28
-        build-tools-version: 28.0.3
-        ndk-version: "25.1.8937393"
+        cmdline-tools-version: "16.0"
+        packages: "platform-tools;build-tools-28.0.3;android-28"
+        accept-android-sdk-licenses: true
+      env:
+        SKIP_JDK_VERSION_CHECK: true
     
     - name: Accept all Android licenses first
       run: |
@@ -444,6 +446,7 @@ jobs:
         ANDROID_SDK=$ANDROID_HOME \
         BUILD_TOOLS_DIR=$ANDROID_HOME/build-tools/28.0.3 \
         BUILDOZER_FORCE_SYSTEM_SDK=1 \
+        SKIP_JDK_VERSION_CHECK=1 \
         buildozer android debug --verbose
     
     - name: Check if APK was created

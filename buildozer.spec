@@ -41,6 +41,9 @@ android.permissions = INTERNET,ACCESS_NETWORK_STATE,READ_PHONE_STATE,GET_TASKS
 # (int) Target Android API, should be as high as possible.
 android.api = 28
 
+# (str) Java version for build process
+android.java_version = 8
+
 # (str) Android SDK path - set to prevent download
 android.sdk_path = 
 
