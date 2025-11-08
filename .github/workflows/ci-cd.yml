@@ -189,17 +189,37 @@ jobs:
         
         # Set environment variables for subsequent steps
         echo "ANDROID_HOME=/home/runner/android-sdk" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=${{ steps.setup-android.outputs.ndk-path }}" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=" >> $GITHUB_ENV
         echo "/home/runner/android-sdk/platform-tools" >> $GITHUB_PATH
         echo "/home/runner/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "/home/runner/android-sdk/build-tools/28.0.3" >> $GITHUB_PATH
         
         echo "=== Android SDK setup complete ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "PATH: $PATH"
         
         # Verify aidl tool is available
-        which aidl || (echo "aidl tool not found!" && exit 1)
-        aidl --version || (echo "aidl tool check failed!" && exit 1)
+        echo "=== Checking aidl tool location ==="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "Build tools directory:"
+        ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "Build tools directory not found"
+        echo "Build tools 28.0.3 directory:"
+        ls -la $ANDROID_HOME/build-tools/28.0.3/ 2>/dev/null || echo "Build tools 28.0.3 not found"
+        echo "aidl tool in build-tools:"
+        ls -la $ANDROID_HOME/build-tools/28.0.3/aidl 2>/dev/null || echo "aidl tool not found in build-tools"
+        
+        # Test aidl tool directly from build-tools
+        if [ -f "$ANDROID_HOME/build-tools/28.0.3/aidl" ]; then
+          echo "✅ Found aidl tool in build-tools directory"
+          $ANDROID_HOME/build-tools/28.0.3/aidl --version
+        else
+          echo "❌ aidl tool not found in build-tools - install may have failed"
+          exit 1
+        fi
+        
+        # Test using sdkmanager to verify installation
+        echo "=== Using sdkmanager to verify build-tools installation ==="
+        sdkmanager --list_installed | grep "build-tools" || echo "Build-tools not found in installed packages"
     
     - name: Install Python dependencies
       run: |
@@ -217,8 +237,11 @@ jobs:
         
         # Check that aidl is available (this is the tool that was missing)
         if command -v aidl &> /dev/null; then
-          echo "✅ aidl tool found and working"
+          echo "✅ aidl tool found in PATH"
           aidl --version
+        elif [ -f "$ANDROID_HOME/build-tools/28.0.3/aidl" ]; then
+          echo "✅ aidl tool found in build-tools directory"
+          $ANDROID_HOME/build-tools/28.0.3/aidl --version
         else
           echo "❌ aidl tool not found - this was the root cause of the original error"
           echo "Available tools in ANDROID_HOME/bin:"
