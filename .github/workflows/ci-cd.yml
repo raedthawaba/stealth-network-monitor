@@ -161,8 +161,8 @@ jobs:
     - name: Install Android SDK and NDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 31
-        build-tools-version: 31.0.0
+        api-level: 30
+        build-tools-version: 30.0.3
         ndk-version: "25.1.8937393"
     
     - name: Set up Android environment
@@ -254,7 +254,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
