@@ -166,18 +166,7 @@ jobs:
         
         # Try multiple approaches to accept licenses
         printf "y\n" | yes | sdkmanager --licenses || true
-        sdkmanager --licenses << EOF
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-EOF
+        yes | sdkmanager --licenses || true
         echo "=== All licenses accepted ==="
     
     - name: Setup Android SDK with minimal packages
