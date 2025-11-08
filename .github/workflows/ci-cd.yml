@@ -345,26 +345,35 @@ jobs:
         echo "BUILDOZER_NO_SDK_UPDATE=1" >> $GITHUB_ENV
         echo "BUILDOZER_SYSTEM_SDK_ONLY=1" >> $GITHUB_ENV
         
-        # Accept ALL Android SDK licenses and INSTALL build-tools 36.1.0
-        echo "=== Accepting ALL Android SDK licenses and installing build-tools 36.1.0 ==="
-        # Accept licenses first
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-        yes | $ANDROID_HOME/tools/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-        # Install build-tools 36.1.0 that buildozer wants
-        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;36.1.0" || echo "Build-tools 36.1.0 installation attempted"
-        # Verify installation
-        if [ -d "$ANDROID_HOME/build-tools/36.1.0" ]; then
-          echo "✅ Build-tools 36.1.0 installed successfully"
-          ls -la $ANDROID_HOME/build-tools/36.1.0/ | head -10
-        else
-          echo "❌ Build-tools 36.1.0 not found, trying alternative installation"
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list | grep "build-tools" | head -5
-        fi
+        # COMPREHENSIVE license acceptance for ALL packages
+        echo "=== Comprehensive license acceptance for ALL Android SDK packages ==="
+        # Accept licenses multiple ways to ensure they are accepted
+        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
+        echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
         
-        # Destroy any existing buildozer SDK installation to force use of pre-installed SDK
-        echo "=== Destroying any existing buildozer SDK to force use of pre-installed SDK ==="
-        rm -rf $HOME/.buildozer/android/platform/android-sdk 2>/dev/null || true
-        rm -rf $HOME/.buildozer/android/platform/android-ndk 2>/dev/null || true
+        # Create license files directly to force acceptance
+        mkdir -p $ANDROID_HOME/licenses
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/android-sdk-license
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-arm64-v8a-license
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > $ANDROID_HOME/licenses/android-sdk-arm64-v8a-license
+        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-preview-license
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/google-license
+        echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/google-license
+        
+        echo "✅ License files created:"
+        ls -la $ANDROID_HOME/licenses/
+        
+        # Create SYMLINKS to force buildozer to use pre-installed SDK
+        echo "=== Creating symlinks to force buildozer to use pre-installed SDK ==="
+        mkdir -p $HOME/.buildozer/android/platform
+        # Create symlinks to force buildozer to use system SDK
+        ln -sf $ANDROID_HOME $HOME/.buildozer/android/platform/android-sdk
+        ln -sf $ANDROID_NDK_HOME $HOME/.buildozer/android/platform/android-ndk
+        echo "✅ Symlinks created:"
+        echo "android-sdk -> $ANDROID_HOME"
+        echo "android-ndk -> $ANDROID_NDK_HOME"
+        ls -la $HOME/.buildozer/android/platform/
         
         # Run buildozer with forced environment and command line arguments to bypass all config
         echo "=== Running buildozer android debug with FORCE command line arguments ==="
